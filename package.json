@@ -68,7 +68,7 @@
   "packageManager": "pnpm@10.5.2",
   "dependencies": {
     "@beeman/repokit": "0.0.0-canary-20250801172233",
-    "@clack/prompts": "^0.7.0",
+    "@clack/prompts": "^0.11.0",
     "commander": "^13.1.0",
     "giget": "^1.2.4",
     "is-in-ci": "^1.0.0",
