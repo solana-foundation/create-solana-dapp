@@ -54,8 +54,8 @@ export async function searchAndReplace(
           }
         }
       }
-    } catch (error_) {
-      console.error(`Error processing file ${filePath}:`, error_)
+    } catch (error) {
+      console.error(`Error processing file ${filePath}:`, error)
     }
   }
 
@@ -85,8 +85,8 @@ export async function searchAndReplace(
           }
         }
       }
-    } catch (error_) {
-      console.error(`Error processing directory ${directoryPath}:`, error_)
+    } catch (error) {
+      console.error(`Error processing directory ${directoryPath}:`, error)
     }
   }
 
@@ -116,8 +116,8 @@ export async function searchAndReplace(
         if (!isDryRun) {
           try {
             await rename(oldPath, newPath)
-          } catch (error_) {
-            console.error(`Failed to rename ${oldPath} -> ${newPath}:`, error_)
+          } catch (error) {
+            console.error(`Failed to rename ${oldPath} -> ${newPath}:`, error)
             continue
           }
         }
