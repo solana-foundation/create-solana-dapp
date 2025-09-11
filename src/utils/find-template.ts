@@ -1,6 +1,5 @@
 import { TemplateJsonTemplate } from '@beeman/repokit'
 import { log } from '@clack/prompts'
-
 import { Template } from './template'
 
 export function findTemplate({
@@ -18,9 +17,9 @@ export function findTemplate({
       log.warning(`Provided template contains a '/' so we treat it as an external template`)
     }
     return {
-      name,
       description: `${name} (external)`,
       id: name.includes(':') ? name : `gh:${name}`,
+      name,
     }
   }
 

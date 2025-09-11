@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: Lint files
+      exclude:
+        - '*.json'
+        - '*.yaml'
+        - '*.yml'
+      run: pnpm lint --fix {staged_files}
+      stage_fixed: true
+    - name: Format files
+      glob:
+        - '*.json'
+        - '**/*.json'
+      run: pnpm prettier --write {staged_files}

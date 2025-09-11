@@ -7,7 +7,6 @@ import { Task, taskFail } from './vendor/clack-tasks'
 
 export function createAppTaskCloneTemplate(args: GetArgsResult): Task {
   return {
-    title: 'Cloning template',
     task: async (result) => {
       const exists = existsSync(args.targetDirectory)
 
@@ -36,5 +35,6 @@ export function createAppTaskCloneTemplate(args: GetArgsResult): Task {
         taskFail(`init: Error cloning the template: ${error}`)
       }
     },
+    title: 'Cloning template',
   }
 }

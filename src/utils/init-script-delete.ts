@@ -6,7 +6,7 @@ import { initScriptKey } from './init-script-schema'
 
 export function initScriptDelete(args: GetArgsResult) {
   const tag = `initScriptDelete`
-  const { path, contents } = getPackageJson(args.targetDirectory)
+  const { contents, path } = getPackageJson(args.targetDirectory)
   delete contents[initScriptKey]
   writeFileSync(path, JSON.stringify(contents, undefined, 2) + '\n')
   if (args.verbose) {

@@ -22,7 +22,7 @@ describe('searchAndReplace', () => {
 
   afterEach(async () => {
     // Clean up the temporary directory after each test
-    await rm(tempDir, { recursive: true, force: true })
+    await rm(tempDir, { force: true, recursive: true })
   })
 
   it('should replace content and rename files in dry run mode without making changes', async () => {

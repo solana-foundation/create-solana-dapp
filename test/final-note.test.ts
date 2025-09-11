@@ -1,6 +1,5 @@
 import { fs, vol } from 'memfs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 import { finalNote, FinalNoteArgs } from '../src/utils/final-note'
 
 vi.mock('node:fs')
@@ -13,16 +12,16 @@ describe('finalNote', () => {
   const baseArgs: FinalNoteArgs = {
     app: { name: 'test-app', version: '1.0.0' },
     dryRun: false,
+    instructions: [],
     name: 'test-project',
-    targetDirectory: '/template',
     packageManager: 'npm',
     skipGit: false,
     skipInit: false,
     skipInstall: false,
-    template: { name: 'basic', description: 'description', repository: '/template' },
-    verbose: false,
     target: 'test-project',
-    instructions: [],
+    targetDirectory: '/template',
+    template: { description: 'description', name: 'basic', repository: '/template' },
+    verbose: false,
   }
 
   it('should include install instructions when skipInstall is true', () => {
@@ -54,8 +53,8 @@ describe('finalNote', () => {
 
     const result = finalNote({
       ...baseArgs,
-      skipInstall: true,
       packageManager: 'yarn' as FinalNoteArgs['packageManager'],
+      skipInstall: true,
     })
 
     expect(result).toContain('yarn install')

@@ -26,8 +26,8 @@ describe('initScriptRename', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(getPackageJson).mockReturnValue({
-      path: `${baseArgs.targetDirectory}/package.json`,
       contents: { name: packageJsonName },
+      path: `${baseArgs.targetDirectory}/package.json`,
     })
   })
 
@@ -40,12 +40,12 @@ describe('initScriptRename', () => {
     app: { name: 'test-app', version: '1.0.0' },
     dryRun: false,
     name: 'test-project',
-    targetDirectory: '/template',
     packageManager: 'npm',
     skipGit: false,
     skipInit: false,
     skipInstall: false,
-    template: { name: 'basic', description: 'description', repository: '/template' },
+    targetDirectory: '/template',
+    template: { description: 'description', name: 'basic', repository: '/template' },
     verbose: false,
   }
 
@@ -70,8 +70,8 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        to: '{{name}}Example',
         paths: ['some/path/to/file'],
+        to: '{{name}}Example',
       },
     }
     const exampleNames = ['Example']
@@ -100,8 +100,8 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        to: '{{name}}Example',
         paths: ['some/path/to/file'],
+        to: '{{name}}Example',
       },
     }
 
@@ -122,8 +122,8 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        to: '{{name}}Example',
         paths: ['nonexistent/path/to/file'],
+        to: '{{name}}Example',
       },
     }
 
