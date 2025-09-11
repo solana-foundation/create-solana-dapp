@@ -15,32 +15,31 @@ on:
       - '**/*.md'
 
 jobs:
+  setup-templates:
+    runs-on: ubuntu-latest
+    outputs:
+      templates: ${{ steps.set-matrix.outputs.templates }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Dependencies
+        uses: ./.github/workflows/actions/install-dependencies
+        with:
+          version: 'current'
+      - name: Build
+        run: pnpm build
+      - id: set-matrix
+        shell: bash
+        run: |
+          echo "templates=$(${{ github.workspace }}/dist/bin/index.cjs --list-template-ids | tr -d '[:space:]')" >> $GITHUB_OUTPUT
+
   test:
     runs-on: ubuntu-latest
+    needs: [setup-templates]
     strategy:
       matrix:
         node: [20, 22]
         pm: [npm, pnpm, yarn]
-        template: [
-            # TODO: Make these values dynamic by adding a parameter to CLI
-            template-next-tailwind,
-            template-next-tailwind-basic,
-            template-next-tailwind-counter,
-            template-node-express,
-            template-node-script,
-            template-react-vite-tailwind,
-            template-react-vite-tailwind-basic,
-            template-react-vite-tailwind-counter,
-            web3js-expo,
-            web3js-expo-paper,
-            legacy-next-tailwind,
-            legacy-next-tailwind-basic,
-            legacy-next-tailwind-counter,
-            legacy-react-vite-tailwind,
-            legacy-react-vite-tailwind-basic,
-            legacy-react-vite-tailwind-counter,
-          ]
-
+        template: ${{ fromJson(needs.setup-templates.outputs.templates) }}
     steps:
       - name: Setup Anchor
         uses: metadaoproject/setup-anchor@v3.1
