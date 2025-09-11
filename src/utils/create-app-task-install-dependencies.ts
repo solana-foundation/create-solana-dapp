@@ -11,7 +11,6 @@ export function createAppTaskInstallDependencies(args: GetArgsResult): Task {
   const { install, lockFile } = getPackageManagerCommand(pm, args.verbose)
   return {
     enabled: !args.skipInstall,
-    title: `Installing via ${pm}`,
     task: async (result) => {
       if (args.verbose) {
         log.warn(`Installing via ${pm}`)
@@ -38,5 +37,6 @@ export function createAppTaskInstallDependencies(args: GetArgsResult): Task {
         taskFail(`init: Error installing dependencies: ${error}`)
       }
     },
+    title: `Installing via ${pm}`,
   }
 }

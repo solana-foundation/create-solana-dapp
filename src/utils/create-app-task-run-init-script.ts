@@ -11,7 +11,6 @@ import { Task, taskFail } from './vendor/clack-tasks'
 export function createAppTaskRunInitScript(args: GetArgsResult): Task {
   return {
     enabled: !args.skipInit,
-    title: 'Running init script',
     task: async (result) => {
       try {
         const { contents } = getPackageJson(args.targetDirectory)
@@ -32,10 +31,11 @@ export function createAppTaskRunInitScript(args: GetArgsResult): Task {
           .map((msg) => msg.replace('{pm}', args.packageManager))
 
         initScriptDelete(args)
-        return result({ message: 'Init script done', instructions })
+        return result({ instructions, message: 'Init script done' })
       } catch (error) {
         taskFail(`Error running init script: ${error}`)
       }
     },
+    title: 'Running init script',
   }
 }

@@ -32,7 +32,7 @@ export async function main(argv: string[]) {
     const instructions = await createApp(args)
 
     note(
-      finalNote({ ...args, target: args.targetDirectory.replace(process.cwd(), '.'), instructions }),
+      finalNote({ ...args, instructions, target: args.targetDirectory.replace(process.cwd(), '.') }),
       'Installation successful',
     )
 

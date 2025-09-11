@@ -51,13 +51,13 @@ export function getPackageManagerCommand(
   packageManager: PackageManager = detectPackageManager(),
   verbose: boolean,
 ): {
-  install: string
   exec: string
-  preInstall?: string
-  globalAdd: string
-  lockFile: string
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string
+  globalAdd: string
+  install: string
+  lockFile: string
+  preInstall?: string
 } {
   const pmVersion = getPackageManagerVersion(packageManager)
   const [pmMajor, pmMinor] = pmVersion.split('.')
@@ -68,13 +68,13 @@ export function getPackageManagerCommand(
       const useBerry = +pmMajor >= 2
       const installCommand = `yarn install ${silent}`
       return {
-        preInstall: `yarn set version ${pmVersion}`,
-        install: useBerry ? installCommand : `${installCommand} --ignore-scripts`,
         // using npx is necessary to avoid yarn classic manipulating the version detection when using berry
         exec: useBerry ? 'npx' : 'yarn',
-        globalAdd: 'yarn global add',
         getRegistryUrl: useBerry ? 'yarn config get npmRegistryServer' : 'yarn config get registry',
+        globalAdd: 'yarn global add',
+        install: useBerry ? installCommand : `${installCommand} --ignore-scripts`,
         lockFile: 'yarn.lock',
+        preInstall: `yarn set version ${pmVersion}`,
       }
     }
 
@@ -84,34 +84,35 @@ export function getPackageManagerCommand(
         useExec = true
       }
       return {
-        install: `pnpm install --no-frozen-lockfile ${silent} --ignore-scripts`,
         exec: useExec ? 'pnpm exec' : 'pnpx',
-        globalAdd: 'pnpm add -g',
         getRegistryUrl: 'pnpm config get registry',
+        globalAdd: 'pnpm add -g',
+        install: `pnpm install --no-frozen-lockfile ${silent} --ignore-scripts`,
         lockFile: 'pnpm-lock.yaml',
       }
     }
 
     case 'npm': {
       return {
-        install: `npm install ${silent} --ignore-scripts`,
         exec: 'npx',
-        globalAdd: 'npm i -g',
         getRegistryUrl: 'npm config get registry',
+        globalAdd: 'npm i -g',
+        install: `npm install ${silent} --ignore-scripts`,
         lockFile: 'package-lock.json',
       }
     }
 
     case 'bun': {
       return {
-        install: `bun install ${silent}`,
         exec: 'bun',
         globalAdd: 'bun add -g',
+        install: `bun install ${silent}`,
         lockFile: 'bun.lock',
       }
     }
   }
 }
+
 const pmVersionCache = new Map<PackageManager, string>()
 
 export function getPackageManagerVersion(packageManager: PackageManager, cwd = process.cwd()): string {

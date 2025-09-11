@@ -12,20 +12,20 @@ import { log, spinner } from '@clack/prompts'
 
 export type Task = {
   /**
-   * Task title
+   * If enabled === false the task will be skipped
    */
-  title: string
+  enabled?: boolean
   /**
    * Task function
    */
   task: (
-    result: (input: { message: string; instructions?: string[] }) => void,
-  ) => Promise<{ message: string; instructions?: string[] }> | void | Promise<void>
+    result: (input: { instructions?: string[]; message: string }) => void,
+  ) => Promise<{ instructions?: string[]; message: string }> | void | Promise<void>
 
   /**
-   * If enabled === false the task will be skipped
+   * Task title
    */
-  enabled?: boolean
+  title: string
 }
 
 /**

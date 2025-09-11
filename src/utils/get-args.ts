@@ -2,18 +2,18 @@ import { intro, log, outro } from '@clack/prompts'
 import { program } from 'commander'
 import * as process from 'node:process'
 import { fetchTemplateData } from './fetch-template-data'
+import { findTemplate } from './find-template'
 import { AppInfo } from './get-app-info'
 import { GetArgsResult } from './get-args-result'
+import { getMenuConfig } from './get-menu-config'
 import { getPrompts } from './get-prompts'
+import { getTemplatesUrl } from './get-templates-url'
+import { listTemplateIds } from './list-template-ids'
+import { listTemplates } from './list-templates'
 import { listVersions } from './list-versions'
 import { runVersionCheck } from './run-version-check'
-import { PackageManager } from './vendor/package-manager'
-import { getTemplatesUrl } from './get-templates-url'
-import { findTemplate } from './find-template'
-import { getMenuConfig } from './get-menu-config'
-import { listTemplates } from './list-templates'
 import { Template } from './template'
-import { listTemplateIds } from './list-template-ids'
+import { PackageManager } from './vendor/package-manager'
 
 export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager = 'npm'): Promise<GetArgsResult> {
   // Get the result from the command line
@@ -56,7 +56,7 @@ Examples:
   const verbose = result.verbose ?? false
 
   // Fetch the templates url, parse the template data and create menu items following our menu config
-  const { templates, items } = await fetchTemplateData({ config: getMenuConfig(), url: result.templatesUrl, verbose })
+  const { items, templates } = await fetchTemplateData({ config: getMenuConfig(), url: result.templatesUrl, verbose })
 
   if (result.listVersions) {
     listVersions()
@@ -109,8 +109,8 @@ Examples:
   // Take the result from the command line and use it to populate the options
   const cwd = process.cwd()
   const options: Omit<GetArgsResult, 'template'> & { template?: Template } = {
-    dryRun: result.dryRun ?? false,
     app,
+    dryRun: result.dryRun ?? false,
     name: name ?? '',
     packageManager,
     skipGit: result.skipGit ?? false,

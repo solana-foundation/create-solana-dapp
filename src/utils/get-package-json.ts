@@ -3,7 +3,7 @@ import { z } from 'zod/v3'
 import { getPackageJsonPath } from './get-package-json-path'
 import { initScriptKey, InitScriptSchema } from './init-script-schema'
 
-export function getPackageJson(targetDirectory: string): { path: string; contents: PackageJson } {
+export function getPackageJson(targetDirectory: string): { contents: PackageJson; path: string } {
   const path = getPackageJsonPath(targetDirectory)
   const exists = existsSync(path)
   if (!exists) {
@@ -20,14 +20,14 @@ export function getPackageJson(targetDirectory: string): { path: string; content
     throw new Error(`Invalid package.json: ${parsed.error.message}`)
   }
 
-  return { path, contents: parsed.data }
+  return { contents: parsed.data, path }
 }
 
 const PackageJsonSchema = z
   .object({
+    [initScriptKey]: InitScriptSchema.optional(),
     name: z.string().optional(),
     scripts: z.record(z.string()).optional(),
-    [initScriptKey]: InitScriptSchema.optional(),
   })
   .passthrough()
 

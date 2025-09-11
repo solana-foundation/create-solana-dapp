@@ -14,8 +14,8 @@ export function getMenuConfig(): MenuConfig {
       description: "JavaScript runtime built on Chrome's V8 engine",
       groups: ['templates', 'legacy', 'gill', 'web3js'],
       id: 'node',
-      name: 'Node.js',
       keywords: ['node'],
+      name: 'Node.js',
     },
     {
       description: 'React with Vite and React Router',

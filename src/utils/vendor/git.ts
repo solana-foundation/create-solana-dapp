@@ -19,12 +19,15 @@ function runCheck(cmd: string): string | undefined {
     return undefined
   }
 }
+
 function checkGitVersion(): string | undefined {
   return runCheck('git --version')?.match(/\d+\.\d+\.+\d+/)?.[0]
 }
+
 function checkGitUserName(): string | undefined {
   return runCheck('git config --global user.name') ?? 'bot'
 }
+
 function checkGitUserEmail(): string | undefined {
   return runCheck('git config --global user.email') ?? 'bot@example.com'
 }
@@ -43,16 +46,16 @@ export async function initializeGitRepo(directory: string, verbose = false) {
     const outputStream = 'ignore'
     const errorStream = ignoreErrorStream ? 'ignore' : process.stderr
     const spawnOptions: SpawnOptions = {
-      stdio: [process.stdin, outputStream, errorStream],
-      shell: true,
       cwd: directory,
       env: {
         ...process.env,
-        GIT_AUTHOR_NAME: name,
-        GIT_COMMITTER_NAME: name,
         GIT_AUTHOR_EMAIL: email,
+        GIT_AUTHOR_NAME: name,
         GIT_COMMITTER_EMAIL: email,
+        GIT_COMMITTER_NAME: name,
       },
+      shell: true,
+      stdio: [process.stdin, outputStream, errorStream],
     }
     return new Promise<void>((resolve, reject) => {
       spawn('git', args, spawnOptions).on('close', (code) => {

@@ -20,22 +20,23 @@
  * @param name
  */
 export interface Names {
-  name: string
   className: string
-  propertyName: string
   constantName: string
   fileName: string
+  name: string
+  propertyName: string
 }
 
 export function names(name: string): Names {
   return {
-    name,
     className: toClassName(name),
-    propertyName: toPropertyName(name),
     constantName: toConstantName(name),
     fileName: toFileName(name),
+    name,
+    propertyName: toPropertyName(name),
   }
 }
+
 export function namesValues(name: string): string[] {
   return Object.values(names(name))
 }
