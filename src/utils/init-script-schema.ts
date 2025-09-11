@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/v3'
 
 // This is the key used in package.json to store the init script
 export const initScriptKey = 'create-solana-dapp'

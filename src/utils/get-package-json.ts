@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { z } from 'zod'
+import { z } from 'zod/v3'
 import { getPackageJsonPath } from './get-package-json-path'
 import { initScriptKey, InitScriptSchema } from './init-script-schema'
 
