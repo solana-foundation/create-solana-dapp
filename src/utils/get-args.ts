@@ -13,6 +13,7 @@ import { findTemplate } from './find-template'
 import { getMenuConfig } from './get-menu-config'
 import { listTemplates } from './list-templates'
 import { Template } from './template'
+import { listTemplateIds } from './list-template-ids'
 
 export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager = 'npm'): Promise<GetArgsResult> {
   // Get the result from the command line
@@ -26,6 +27,7 @@ export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager =
     .option('--bun', help(`Use bun as the package manager`), false)
     .option('-d, --dry-run', help('Dry run (default: false)'))
     .option('-t, --template <template-name>', help('Use a template'))
+    .option('--list-template-ids', help('List available template ids as JSON array'))
     .option('--list-templates', help('List available templates'))
     .option('--list-versions', help('Verify your versions of Anchor, AVM, Rust, and Solana'))
     .option('--skip-git', help('Skip git initialization'))
@@ -66,6 +68,11 @@ Examples:
     outro(
       `\uD83D\uDCA1 To use a template, run "${app.name}${name ? ` ${name}` : ''} --template <template-name>" or "--template <github-org>/<github-repo>" `,
     )
+    process.exit(0)
+  }
+
+  if (result.listTemplateIds) {
+    console.log(listTemplateIds({ templates }))
     process.exit(0)
   }
   let packageManager = result.packageManager ?? pm
