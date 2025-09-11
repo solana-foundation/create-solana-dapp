@@ -1,5 +1,5 @@
 import { readdir, readFile, rename, writeFile } from 'node:fs/promises'
-import { join, extname, basename } from 'node:path'
+import { basename, extname, join } from 'node:path'
 
 const EXCLUDED_DIRECTORIES = new Set(['dist', 'coverage', 'node_modules', '.git', 'tmp'])
 
@@ -67,7 +67,9 @@ export async function searchAndReplace(
         const fullPath = join(directoryPath, entry.name)
 
         if (EXCLUDED_DIRECTORIES.has(entry.name)) {
-          if (isVerbose) console.log(`Skipping excluded directory: ${fullPath}`)
+          if (isVerbose) {
+            console.log(`Skipping excluded directory: ${fullPath}`)
+          }
           continue
         }
 
@@ -94,7 +96,12 @@ export async function searchAndReplace(
     const entries = await readdir(directoryPath, { withFileTypes: true })
 
     for (const entry of entries) {
-      if (EXCLUDED_DIRECTORIES.has(entry.name)) continue
+      if (EXCLUDED_DIRECTORIES.has(entry.name)) {
+        if (isVerbose) {
+          console.log(`Found in excluded directory: ${entry.name}`)
+        }
+        continue
+      }
 
       const oldPath = join(directoryPath, entry.name)
 
