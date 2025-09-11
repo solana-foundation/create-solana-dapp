@@ -61,6 +61,7 @@
     "eslint-config-unjs": "^0.5.0",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-sort": "^4.0.0",
+    "lefthook": "^1.12.4",
     "memfs": "^4.39.0",
     "mock-fs": "^5.5.0",
     "prettier": "^3.6.2",
@@ -69,6 +70,11 @@
     "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.15.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "lefthook"
+    ]
+  },
   "dependencies": {
     "@beeman/repokit": "0.0.0-canary-20250801172233",
     "@clack/prompts": "0.7.0",
