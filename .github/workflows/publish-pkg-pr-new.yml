@@ -1,0 +1,25 @@
+name: Publish pkg.pr.new
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+env:
+  # See https://consoledonottrack.com/
+  DO_NOT_TRACK: '1'
+
+jobs:
+  build-and-publish-snapshots-to-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: ./.github/workflows/actions/install-dependencies
+
+      - name: Run Build Step
+        run: pnpm build
+
+      - name: Publish to pkg.pr.new
+        run: pnpm pkg-pr-new publish
