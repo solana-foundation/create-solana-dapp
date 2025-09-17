@@ -15,6 +15,8 @@ import { runVersionCheck } from './run-version-check'
 import { Template } from './template'
 import { PackageManager } from './vendor/package-manager'
 
+const minimalTemplateName = 'gill-next-tailwind-minimal'
+
 export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager = 'npm'): Promise<GetArgsResult> {
   // Get the result from the command line
   const input = program
@@ -30,6 +32,7 @@ export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager =
     .option('--list-template-ids', help('List available template ids as JSON array'))
     .option('--list-templates', help('List available templates'))
     .option('--list-versions', help('Verify your versions of Anchor, AVM, Rust, and Solana'))
+    .option('--minimal', help(`Select the minimal template (${minimalTemplateName})`), false)
     .option('--skip-git', help('Skip git initialization'))
     .option('--skip-init', help('Skip running the init script'))
     .option('--skip-install', help('Skip installing dependencies'))
@@ -101,6 +104,14 @@ Examples:
   intro(`${app.name} ${app.version}`)
 
   let template: Template | undefined
+
+  if (result.template && result.minimal) {
+    throw new Error(`The --minimal flag can't be used in combination with --template. Please specify only one.`)
+  }
+
+  if (result.minimal) {
+    result.template = minimalTemplateName
+  }
 
   if (result.template) {
     template = findTemplate({ name: result.template, templates, verbose })
