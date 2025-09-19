@@ -1,5 +1,19 @@
 # create-solana-dapp
 
+## 4.7.0
+
+### Minor Changes
+
+- [#205](https://github.com/solana-foundation/create-solana-dapp/pull/205)
+  [`49c4050`](https://github.com/solana-foundation/create-solana-dapp/commit/49c40509000d2e5987aa30b513ae1343157cab8e)
+  Thanks [@beeman](https://github.com/beeman)! - add `--minimal` flag to that selects 'gill-next-tailwind-minimal'
+
+### Patch Changes
+
+- [#207](https://github.com/solana-foundation/create-solana-dapp/pull/207)
+  [`cea96d8`](https://github.com/solana-foundation/create-solana-dapp/commit/cea96d88dec5c79bb204b39b940147c3fb7a69d9)
+  Thanks [@beeman](https://github.com/beeman)! - update solana docs url
+
 ## 4.6.0
 
 ### Minor Changes
