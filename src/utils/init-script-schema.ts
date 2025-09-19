@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/v3'
 
 // This is the key used in package.json to store the init script
 export const initScriptKey = 'create-solana-dapp'
@@ -13,9 +13,9 @@ export const InitScriptSchemaVersions = z.object({
 
 export const InitScriptSchemaRename = z.record(
   z.object({
-    to: z.string(),
     // TODO: Rename 'paths' to 'in' (breaking change)
     paths: z.array(z.string()),
+    to: z.string(),
   }),
 )
 

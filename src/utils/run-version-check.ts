@@ -26,7 +26,7 @@ export async function runVersionCheck({
   const command = `${packageManager} create-solana-dapp${packageManager === 'yarn' ? '' : '@latest'}`
 
   if (verbose) {
-    note(JSON.stringify({ current, latest, isCanary, isOutdated, command }, undefined, 2), 'Version check')
+    note(JSON.stringify({ command, current, isCanary, isOutdated, latest }, undefined, 2), 'Version check')
   }
 
   if (isOutdated && !isCanary) {
@@ -36,7 +36,7 @@ export async function runVersionCheck({
       `Pass --skip-version-check to skip this check.`,
     ]
 
-    notifier.notify({ message: lines.join('\n'), defer: false })
+    notifier.notify({ defer: false, message: lines.join('\n') })
     process.exit(1)
   }
 }

@@ -1,6 +1,6 @@
+import { MenuItem } from '@beeman/repokit'
 import { isCancel, log, select, SelectOptions } from '@clack/prompts'
 import { GetArgsResult } from './get-args-result'
-import { MenuItem } from '@beeman/repokit'
 import { Template } from './template'
 
 export function getPromptTemplate({ items, options }: { items: MenuItem[]; options: GetArgsResult }) {
@@ -21,18 +21,18 @@ export function getPromptTemplate({ items, options }: { items: MenuItem[]; optio
 
 function getGroupSelectOptions(values: MenuItem[]): SelectOptions<
   {
-    value: MenuItem
-    label: string
     hint?: string | undefined
+    label: string
+    value: MenuItem
   }[],
   MenuItem
 > {
   return {
     message: 'Select a group',
     options: values.map((value) => ({
+      hint: value.description ?? '',
       label: value.name,
       value,
-      hint: value.description ?? '',
     })),
   }
 }
@@ -43,13 +43,13 @@ function selectGroup(values: MenuItem[]): Promise<MenuItem> {
 
 function getTemplateSelectOptions(
   values: Template[],
-): SelectOptions<{ value: Template; label: string; hint?: string | undefined }[], Template> {
+): SelectOptions<{ hint?: string | undefined; label: string; value: Template }[], Template> {
   return {
     message: 'Select a template',
     options: values.map((value) => ({
+      hint: value.description ?? '',
       label: value.name,
       value,
-      hint: value.description ?? '',
     })),
   }
 }

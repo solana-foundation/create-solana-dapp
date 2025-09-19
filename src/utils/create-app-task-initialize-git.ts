@@ -6,7 +6,6 @@ import { initializeGitRepo } from './vendor/git'
 export function createAppTaskInitializeGit(args: GetArgsResult): Task {
   return {
     enabled: !args.skipGit,
-    title: 'Initializing git',
     task: async (result) => {
       try {
         if (args.verbose) {
@@ -23,5 +22,6 @@ export function createAppTaskInitializeGit(args: GetArgsResult): Task {
         taskFail(`init: Error initializing git: ${error}`)
       }
     },
+    title: 'Initializing git',
   }
 }

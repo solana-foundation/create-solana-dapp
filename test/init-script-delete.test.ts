@@ -26,19 +26,19 @@ describe('initScriptDelete', () => {
     app: { name: 'test-app', version: '1.0.0' },
     dryRun: false,
     name: 'test-project',
-    targetDirectory: '/template',
     packageManager: 'npm',
     skipGit: false,
     skipInit: false,
     skipInstall: false,
-    template: { name: 'basic', description: 'description', repository: '/template' },
+    targetDirectory: '/template',
+    template: { description: 'description', name: 'basic', repository: '/template' },
     verbose: true,
   }
 
   it('should remove the init script key from package.json', () => {
     const packageJsonContent = {
-      name: 'my-app',
       [initScriptKey]: { someKey: 'someValue' },
+      name: 'my-app',
     }
 
     fs.mkdirSync(targetDirectory, { recursive: true })
@@ -46,7 +46,7 @@ describe('initScriptDelete', () => {
 
     initScriptDelete(baseArgs)
 
-    const { path: updatedPath, contents: updatedContents } = getPackageJson(targetDirectory)
+    const { contents: updatedContents, path: updatedPath } = getPackageJson(targetDirectory)
 
     expect(updatedPath).toBe(packageJsonPath)
     expect(updatedContents).not.toHaveProperty(initScriptKey)
@@ -62,7 +62,7 @@ describe('initScriptDelete', () => {
 
     initScriptDelete(baseArgs)
 
-    const { path: updatedPath, contents: updatedContents } = getPackageJson(targetDirectory)
+    const { contents: updatedContents, path: updatedPath } = getPackageJson(targetDirectory)
 
     expect(updatedPath).toBe(packageJsonPath)
     expect(updatedContents).toEqual(packageJsonContent)
@@ -71,8 +71,8 @@ describe('initScriptDelete', () => {
   it('should log message when verbose', () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     const packageJsonContent = {
-      name: 'my-app',
       [initScriptKey]: { someKey: 'someValue' },
+      name: 'my-app',
     }
 
     fs.mkdirSync(targetDirectory, { recursive: true })
