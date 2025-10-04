@@ -16,14 +16,35 @@ export const InitScriptSchemaVersions = z.object({
   solana: z.string().optional(),
 })
 
-export const InitScriptSchemaRename = z.record(
-  z.string(),
-  z.object({
-    // TODO: Rename 'paths' to 'in' (breaking change)
-    paths: z.array(z.string()),
+export const InitScriptSchemaRenameEntry = z
+  .object({
+    in: z.array(z.string()).optional(),
+    /** @deprecated Use `in` instead. Support for `paths` is removed in the next major version. */
+    paths: z.array(z.string()).optional(),
     to: z.string(),
-  }),
-)
+  })
+  .check((payload) => {
+    const { in: paths, paths: deprecatedPaths } = payload.value
+
+    if (paths && deprecatedPaths) {
+      payload.issues.push({
+        code: 'custom',
+        input: payload.value,
+        message: `Use either 'in' or 'paths', not both ('paths' is deprecated, use 'in')`,
+      })
+      return
+    }
+
+    if (!paths && !deprecatedPaths) {
+      payload.issues.push({
+        code: 'custom',
+        input: payload.value,
+        message: `Missing 'in': list the paths to search for this rename`,
+      })
+    }
+  })
+
+export const InitScriptSchemaRename = z.record(z.string(), InitScriptSchemaRenameEntry)
 
 export const InitScriptSchemaOption = z.object({
   default: z.boolean().optional(),
@@ -49,5 +70,6 @@ export type InitScriptOption = z.infer<typeof InitScriptSchemaOption>
 export type InitScriptOptions = z.infer<typeof InitScriptSchemaOptions>
 export type InitScriptPackageManager = z.infer<typeof InitScriptSchemaPackageManager>
 export type InitScriptRename = z.infer<typeof InitScriptSchemaRename>
+export type InitScriptRenameEntry = z.infer<typeof InitScriptSchemaRenameEntry>
 export type InitScriptSkills = z.infer<typeof InitScriptSchemaSkills>
 export type InitScriptVersions = z.infer<typeof InitScriptSchemaVersions>
