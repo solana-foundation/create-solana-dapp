@@ -77,7 +77,6 @@
     ]
   },
   "dependencies": {
-    "@beeman/repokit": "0.0.0-canary-20250801172233",
     "@clack/prompts": "0.7.0",
     "commander": "14.0.0",
     "giget": "2.0.0",
