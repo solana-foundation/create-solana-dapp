@@ -1,6 +1,6 @@
-import { TemplateJsonTemplate } from '@beeman/repokit'
 import { log } from '@clack/prompts'
 import { Template } from './template'
+import { TemplateJsonTemplate } from './template-schema'
 
 export function findTemplate({
   name,
