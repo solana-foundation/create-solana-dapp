@@ -30,7 +30,9 @@ jobs:
       - id: set-matrix
         shell: bash
         run: |
-          echo "templates=$(${{ github.workspace }}/dist/bin/index.cjs --list-template-ids | tr -d '[:space:]')" >> $GITHUB_OUTPUT
+          CLI_PATH="${{ github.workspace }}/dist/bin/index.cjs"
+          templates=$(node "$CLI_PATH" --list-template-ids | jq -c 'map(select(contains("/community/") | not))')
+          echo "templates=$templates" >> "$GITHUB_OUTPUT"
 
   test:
     runs-on: ubuntu-latest
