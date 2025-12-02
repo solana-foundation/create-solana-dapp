@@ -75,7 +75,7 @@ Examples:
   }
 
   if (result.listTemplateIds) {
-    console.log(listTemplateIds({ templates }))
+    console.log(JSON.stringify(listTemplateIds({ templates })))
     process.exit(0)
   }
   let packageManager = result.packageManager ?? pm
