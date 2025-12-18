@@ -43,10 +43,6 @@ export async function initScriptRename(args: GetArgsResult, rename?: InitScriptR
     const fromNames = namesValues(from)
     const toNames = namesValues(to)
 
-    // Deduplicate the arrays to prevent multiple replacements of the same pattern
-    const uniqueFromNames = [...new Set(fromNames)]
-    const uniqueToNames = [...new Set(toNames)]
-
     for (const path of rename[from].paths) {
       const targetPath = join(args.targetDirectory, path)
       if (!(await ensureTargetPath(targetPath))) {
@@ -54,9 +50,9 @@ export async function initScriptRename(args: GetArgsResult, rename?: InitScriptR
         continue
       }
       if (args.verbose) {
-        log.warn(`${tag}: ${targetPath} -> ${uniqueFromNames.join('|')} -> ${uniqueToNames.join('|')}`)
+        log.warn(`${tag}: ${targetPath} -> ${fromNames.join('|')} -> ${toNames.join('|')}`)
       }
-      await searchAndReplace(targetPath, uniqueFromNames, uniqueToNames, args.dryRun, args.verbose)
+      await searchAndReplace(targetPath, fromNames, toNames, args.dryRun, args.verbose)
     }
   }
 
