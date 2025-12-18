@@ -15,7 +15,7 @@ import { runVersionCheck } from './run-version-check'
 import { Template } from './template'
 import { PackageManager } from './vendor/package-manager'
 
-const minimalTemplateName = 'gill-next-tailwind-minimal'
+const minimalTemplateName = 'nextjs-anchor'
 
 export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager = 'npm'): Promise<GetArgsResult> {
   // Get the result from the command line
