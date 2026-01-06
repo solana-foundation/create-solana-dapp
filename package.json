@@ -42,7 +42,7 @@
     "lint": "eslint .",
     "lint:fix": "automd && eslint . --fix",
     "prepublishOnly": "pnpm pkg delete devDependencies",
-    "publish-impl": "npm view $npm_package_name@$npm_package_version > /dev/null 2>&1 || pnpm publish --tag ${PUBLISH_TAG:-canary} --access public --no-git-checks",
+    "publish-impl": "npm view $npm_package_name@$npm_package_version > /dev/null 2>&1 || pnpm publish --tag ${PUBLISH_TAG:-latest} --access public --no-git-checks",
     "publish-packages": "pnpm prepublishOnly && pnpm publish-impl",
     "test": "pnpm lint && pnpm test:types && vitest run --coverage",
     "test:types": "tsc --noEmit --skipLibCheck"
