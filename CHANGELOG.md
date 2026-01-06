@@ -1,5 +1,13 @@
 # create-solana-dapp
 
+## 4.8.2
+
+### Patch Changes
+
+- [#225](https://github.com/solana-foundation/create-solana-dapp/pull/225)
+  [`25155c5`](https://github.com/solana-foundation/create-solana-dapp/commit/25155c503ddac9ce9092880db31dce67ca217bfd)
+  Thanks [@GuiBibeau](https://github.com/GuiBibeau)! - feat: show setup progress for anchor templates
+
 ## 4.8.1
 
 ### Patch Changes
