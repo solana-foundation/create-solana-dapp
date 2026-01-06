@@ -1,5 +1,13 @@
 # create-solana-dapp
 
+## 4.8.1
+
+### Patch Changes
+
+- [#223](https://github.com/solana-foundation/create-solana-dapp/pull/223)
+  [`c5bde70`](https://github.com/solana-foundation/create-solana-dapp/commit/c5bde70d60ed2d0457550dfaf440e084c284b5d1)
+  Thanks [@GuiBibeau](https://github.com/GuiBibeau)! - fix: enable automated npm publish to `latest` tag
+
 ## 4.8.0
 
 ### Minor Changes
