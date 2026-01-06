@@ -1,5 +1,30 @@
 # create-solana-dapp
 
+## 4.8.0
+
+### Minor Changes
+
+- [#218](https://github.com/solana-foundation/create-solana-dapp/pull/218)
+  [`d72efe7`](https://github.com/solana-foundation/create-solana-dapp/commit/d72efe79b0c92c7a1d638ea674cd8b16db466d0e)
+  Thanks [@GuiBibeau](https://github.com/GuiBibeau)! - Make Kit Framework templates the default choice instead of Gill.
+  - Kit Framework is now the first and recommended option
+  - Removed Node.js template option
+  - Web3.js templates moved to bottom and marked as deprecated
+  - Updated `--minimal` flag to use Kit's `nextjs` template
+
+### Patch Changes
+
+- [#220](https://github.com/solana-foundation/create-solana-dapp/pull/220)
+  [`1f73c77`](https://github.com/solana-foundation/create-solana-dapp/commit/1f73c7738388233d85fb350cc73a8df387b62136)
+  Thanks [@GuiBibeau](https://github.com/GuiBibeau)! - Fix init script rename failing with mismatched array lengths. The
+  deduplication logic was breaking the 1:1 correspondence between from and to arrays.
+
+- [#222](https://github.com/solana-foundation/create-solana-dapp/pull/222)
+  [`476ba8f`](https://github.com/solana-foundation/create-solana-dapp/commit/476ba8fa3a3b2f6ea1f672031c615e1765c73930)
+  Thanks [@GuiBibeau](https://github.com/GuiBibeau)! - Fix renamePaths applying string replacement to full absolute path
+  instead of entry name only. This caused path duplication when the project name contained the template name (e.g.,
+  creating "test-kit-nextjs" from template "nextjs" would try to rename to "test-kit-test-kit-nextjs").
+
 ## 4.7.1
 
 ### Patch Changes
