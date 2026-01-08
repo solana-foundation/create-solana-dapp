@@ -24,6 +24,12 @@ export function findTemplate({
       throw new Error(`Local template path does not exist: ${absolutePath}`)
     }
 
+    // Security warning for local templates
+    log.warning(
+      'Please install templates you trust and have verified. This feature is only intended for local development and not to clone official templates.',
+    )
+    log.info(`View official templates at: https://github.com/solana-foundation/templates`)
+
     if (verbose) {
       log.warning(`Using local template from: ${absolutePath}`)
     }
