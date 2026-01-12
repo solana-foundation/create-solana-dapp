@@ -1,6 +1,7 @@
-import { getMenuItems, MenuConfig, TemplateJsonGroup } from '@beeman/repokit'
 import { log } from '@clack/prompts'
 import pico from 'picocolors'
+import { getMenuItems } from './menu-utils'
+import { MenuConfig, TemplateJsonGroup } from './template-schema'
 
 export function getMenuItemsFromTemplateGroups({
   config,

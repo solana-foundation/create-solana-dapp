@@ -1,7 +1,7 @@
-import { MenuItem } from '@beeman/repokit'
 import { isCancel, log, select, SelectOptions } from '@clack/prompts'
 import { GetArgsResult } from './get-args-result'
 import { Template } from './template'
+import { MenuItem } from './template-schema'
 
 export function getPromptTemplate({ items, options }: { items: MenuItem[]; options: GetArgsResult }) {
   return async () => {

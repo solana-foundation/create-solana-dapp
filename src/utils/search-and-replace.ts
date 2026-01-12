@@ -93,11 +93,13 @@ export async function searchAndReplace(
         }
 
         const oldPath = join(directoryPath, entry.name)
-        let newPath = oldPath
+        let newName = entry.name
 
         for (const [i, fromString] of fromStrings.entries()) {
-          newPath = newPath.replace(new RegExp(fromString, 'g'), toStrings[i])
+          newName = newName.replace(new RegExp(fromString, 'g'), toStrings[i])
         }
+
+        const newPath = join(directoryPath, newName)
 
         if (oldPath !== newPath) {
           if (!isDryRun) {
