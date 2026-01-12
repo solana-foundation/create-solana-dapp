@@ -3,6 +3,25 @@ import { join } from 'node:path'
 
 const EXCLUDED_DIRECTORIES = new Set(['dist', 'coverage', 'node_modules', '.git', 'tmp'])
 
+// Escape special regex characters in a string so it can be used as a literal pattern.
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Count literal (non-regex) occurrences of `needle` within `haystack`.
+function countOccurrences(haystack: string, needle: string): number {
+  if (!needle) return 0
+  let count = 0
+  let position = 0
+  while (true) {
+    const index = haystack.indexOf(needle, position)
+    if (index === -1) break
+    count++
+    position = index + needle.length
+  }
+  return count
+}
+
 export async function searchAndReplace(
   rootFolder: string,
   fromStrings: string[],
@@ -20,7 +39,7 @@ export async function searchAndReplace(
       let newContent = content
 
       for (const [i, fromString] of fromStrings.entries()) {
-        const regex = new RegExp(fromString, 'g')
+        const regex = new RegExp(escapeRegExp(fromString), 'g')
         newContent = newContent.replace(regex, toStrings[i])
         // Make sure we maintain the possible newline at the end of the file
         if (content.endsWith('\n') && !newContent.endsWith('\n')) {
@@ -36,7 +55,7 @@ export async function searchAndReplace(
           console.log(`${isDryRun ? '[Dry Run] ' : ''}File modified: ${filePath}`)
         }
         for (const [index, fromStr] of fromStrings.entries()) {
-          const count = (newContent.match(new RegExp(toStrings[index], 'g')) || []).length
+          const count = countOccurrences(newContent, toStrings[index])
           if (count > 0 && isVerbose) {
             console.log(`  Replaced "${fromStr}" with "${toStrings[index]}" ${count} time(s)`)
           }
