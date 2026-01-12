@@ -25,8 +25,8 @@ describe('getVersionUrls', () => {
   it('should return install url for "solana"', () => {
     const urls = getVersionUrls('solana' as VersionCommand, '')
     expect(urls).toEqual({
-      install: 'https://docs.solana.com/cli/install-solana-cli-tools',
-      update: 'https://docs.solana.com/cli/install-solana-cli-tools',
+      install: 'https://solana.com/docs/intro/installation',
+      update: 'https://solana.com/docs/intro/installation',
     })
   })
 

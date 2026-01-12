@@ -1,6 +1,6 @@
-import { MenuItem, TemplateJsonTemplate } from '@beeman/repokit'
 import { log } from '@clack/prompts'
 import pico from 'picocolors'
+import { MenuItem, TemplateJsonTemplate } from './template-schema'
 
 export function getTemplatesFromItems({
   items,

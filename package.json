@@ -1,6 +1,6 @@
 {
   "name": "create-solana-dapp",
-  "version": "4.6.0",
+  "version": "4.8.2",
   "description": "The fastest way to create Solana apps",
   "repository": {
     "name": "solana-foundation/create-solana-dapp",
@@ -42,7 +42,7 @@
     "lint": "eslint .",
     "lint:fix": "automd && eslint . --fix",
     "prepublishOnly": "pnpm pkg delete devDependencies",
-    "publish-impl": "npm view $npm_package_name@$npm_package_version > /dev/null 2>&1 || pnpm publish --tag ${PUBLISH_TAG:-canary} --access public --no-git-checks",
+    "publish-impl": "npm view $npm_package_name@$npm_package_version > /dev/null 2>&1 || pnpm publish --tag ${PUBLISH_TAG:-latest} --access public --no-git-checks",
     "publish-packages": "pnpm prepublishOnly && pnpm publish-impl",
     "test": "pnpm lint && pnpm test:types && vitest run --coverage",
     "test:types": "tsc --noEmit --skipLibCheck"
@@ -77,7 +77,6 @@
     ]
   },
   "dependencies": {
-    "@beeman/repokit": "0.0.0-canary-20250801172233",
     "@clack/prompts": "0.7.0",
     "commander": "14.0.1",
     "giget": "2.0.0",

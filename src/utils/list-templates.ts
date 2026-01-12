@@ -1,5 +1,5 @@
-import { TemplateJsonTemplate } from '@beeman/repokit'
 import { log } from '@clack/prompts'
+import { TemplateJsonTemplate } from './template-schema'
 
 export function listTemplates({ templates }: { templates: TemplateJsonTemplate[] }) {
   for (const template of templates) {
