@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/v3'
 
 // This is the key used in package.json to store the init script
 export const initScriptKey = 'create-solana-dapp'
@@ -11,13 +11,23 @@ export const InitScriptSchemaVersions = z.object({
   solana: z.string().optional(),
 })
 
-export const InitScriptSchemaRename = z.record(
-  z.object({
-    to: z.string(),
-    // TODO: Rename 'paths' to 'in' (breaking change)
-    paths: z.array(z.string()),
-  }),
-)
+const InitScriptSchemaRenameEntryBase = z.object({
+  // Accept alias `in` for backward/forward compatibility and normalize to `paths`
+  in: z.array(z.string()).optional(),
+  paths: z.array(z.string()).optional(),
+  to: z.string(),
+})
+
+export const InitScriptSchemaRename = z.record(InitScriptSchemaRenameEntryBase).transform((input) => {
+  // Normalize entries: if `in` is provided, move to `paths`
+  const normalized: Record<string, { paths: string[]; to: string }> = {}
+  for (const key of Object.keys(input)) {
+    const entry = input[key] as { in?: string[]; paths?: string[]; to: string }
+    const paths = entry.paths ?? entry.in ?? []
+    normalized[key] = { paths, to: entry.to }
+  }
+  return normalized
+})
 
 export const InitScriptSchema = z.object({
   instructions: InitScriptSchemaInstructions.optional(),

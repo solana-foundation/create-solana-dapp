@@ -15,7 +15,7 @@ const urls: Record<VersionCommand, VersionUrls> = {
     update: 'https://www.anchor-lang.com/release-notes/{required}',
   },
   solana: {
-    install: 'https://docs.solana.com/cli/install-solana-cli-tools',
+    install: 'https://solana.com/docs/intro/installation',
   },
 }
 

@@ -1,6 +1,6 @@
 import { log } from '@clack/prompts'
 import pico from 'picocolors'
-import { fetchTemplatesJsonUrl } from '@beeman/repokit'
+import { fetchTemplatesJsonUrl } from './fetch-templates'
 
 export async function getTemplateGroupsFromUrl({ url, verbose }: { url: string; verbose: boolean }) {
   if (verbose) {

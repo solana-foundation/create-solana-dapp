@@ -4,8 +4,8 @@ import { getPackageJson } from './get-package-json'
 import { getStartScript } from './get-start-script'
 
 export interface FinalNoteArgs extends GetArgsResult {
-  target: string
   instructions: string[]
+  target: string
 }
 
 export function finalNote(args: FinalNoteArgs): string {

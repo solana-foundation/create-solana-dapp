@@ -26,8 +26,8 @@ describe('initScriptRename', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(getPackageJson).mockReturnValue({
-      path: `${baseArgs.targetDirectory}/package.json`,
       contents: { name: packageJsonName },
+      path: `${baseArgs.targetDirectory}/package.json`,
     })
   })
 
@@ -40,12 +40,12 @@ describe('initScriptRename', () => {
     app: { name: 'test-app', version: '1.0.0' },
     dryRun: false,
     name: 'test-project',
-    targetDirectory: '/template',
     packageManager: 'npm',
     skipGit: false,
     skipInit: false,
     skipInstall: false,
-    template: { name: 'basic', description: 'description', repository: '/template' },
+    targetDirectory: '/template',
+    template: { description: 'description', name: 'basic', repository: '/template' },
     verbose: false,
   }
 
@@ -70,12 +70,12 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        to: '{{name}}Example',
         paths: ['some/path/to/file'],
+        to: '{{name}}Example',
       },
     }
     const exampleNames = ['Example']
-    const newNameExamples = ['newprojectExample']
+    const newNameExamples = ['test-projectExample']
     vi.mocked(namesValues).mockImplementation((name) => (name === 'example' ? exampleNames : newNameExamples))
     vi.mocked(ensureTargetPath).mockResolvedValue(true)
 
@@ -100,20 +100,20 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        to: '{{name}}Example',
         paths: ['some/path/to/file'],
+        to: '{{name}}Example',
       },
     }
 
     const exampleNames = ['Example']
-    const newNameExamples = ['testprojectExample']
+    const newNameExamples = ['test-projectExample']
     vi.mocked(namesValues).mockImplementation((name) => (name === 'example' ? exampleNames : newNameExamples))
     vi.mocked(ensureTargetPath).mockResolvedValue(true)
 
     await initScriptRename(args, rename)
 
     expect(log.warn).toHaveBeenCalledWith(
-      expect.stringContaining('initScriptRename: /template/some/path/to/file -> Example -> testprojectExample'),
+      expect.stringContaining('initScriptRename: /template/some/path/to/file -> Example -> test-projectExample'),
     )
     expect(log.warn).toHaveBeenCalledWith('initScriptRename: done')
   })
@@ -122,8 +122,8 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        to: '{{name}}Example',
         paths: ['nonexistent/path/to/file'],
+        to: '{{name}}Example',
       },
     }
 
