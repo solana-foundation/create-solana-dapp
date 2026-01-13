@@ -28,8 +28,16 @@ export async function initScriptRename(args: GetArgsResult, rename?: InitScriptR
 
   // Loop through each word in the rename object
   for (const from of Object.keys(rename)) {
+    // Skip if the 'from' value matches the package.json name (already replaced above)
+    if (from === contents.name) {
+      if (args.verbose) {
+        log.warn(`${tag}: skipping rename for '${from}' as it matches package.json name (already replaced)`)
+      }
+      continue
+    }
+
     // Get the 'to' property from the rename object
-    const to = rename[from].to.replace('{{name}}', args.name.replace(/-/g, ''))
+    const to = rename[from].to.replace('{{name}}', args.name)
 
     // Get the name matrix for the 'from' and the 'to' value
     const fromNames = namesValues(from)

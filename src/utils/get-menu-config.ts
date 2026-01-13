@@ -1,28 +1,14 @@
-import { MenuConfig } from '@beeman/repokit'
+import { MenuConfig } from './template-schema'
 
 // This configuration defines the menu options of the CLI and the groups and keywords they filter on.
 export function getMenuConfig(): MenuConfig {
   return [
     {
-      description: 'A React framework by Vercel',
-      groups: ['templates', 'legacy', 'gill', 'web3js'],
-      id: 'next',
-      keywords: ['nextjs'],
-      name: 'Next.js',
-    },
-    {
-      description: "JavaScript runtime built on Chrome's V8 engine",
-      groups: ['templates', 'legacy', 'gill', 'web3js'],
-      id: 'node',
-      keywords: ['node'],
-      name: 'Node.js',
-    },
-    {
-      description: 'React with Vite and React Router',
-      groups: ['templates', 'legacy', 'gill', 'web3js'],
-      id: 'react-vite',
-      keywords: ['react', 'vite'],
-      name: 'React with Vite',
+      description: 'Recommended - Uses @solana/kit and @solana/react-hooks',
+      groups: ['kit'],
+      id: 'kit',
+      keywords: [],
+      name: 'Kit Framework',
     },
     {
       description: 'Solana Mobile Templates based on Expo',
@@ -32,11 +18,18 @@ export function getMenuConfig(): MenuConfig {
       name: 'Solana Mobile',
     },
     {
-      description: 'Templates created by the community (unsupported)',
+      description: 'Templates created by the community',
       groups: ['community'],
       id: 'community',
       keywords: [],
       name: 'Community',
+    },
+    {
+      description: 'Deprecated - Uses @solana/web3.js',
+      groups: ['web3js'],
+      id: 'web3js',
+      keywords: [],
+      name: 'Web3.js',
     },
   ]
 }
