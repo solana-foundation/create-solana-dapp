@@ -1,11 +1,21 @@
 # create-solana-dapp
 
-:zap: Get up and running fast with Solana dApps :zap:
+The fastest way to create Solana apps :rocket:
 
-Just run one simple command to generate a new project!
+Run one command to generate a new project:
 
 ```shell
-npx create-solana-dapp@latest
+# npm
+npm create solana-dapp@latest
+
+# pnpm
+pnpm create solana-dapp@latest
+
+# bun
+bun create solana-dapp@latest
+
+# yarn (only supports the 'latest' tag)
+yarn create solana-dapp
 ```
 
 [![npm version](https://img.shields.io/npm/v/create-solana-dapp?color=yellow)](https://npmjs.com/package/create-solana-dapp)
@@ -16,7 +26,7 @@ This is a CLI that automates the initialization of predefined Solana templates (
 ## Templates
 
 The official `create-solana-dapp` templates can be found in
-[this repository](https://github.com/solana-developers/solana-templates).
+[this repository](https://github.com/solana-foundation/templates).
 
 ## External templates
 
@@ -25,7 +35,14 @@ You can also use `create-solana-dapp` to create projects using external template
 The `--template` (or `-t`) flag supports anything that [giget](https://github.com/unjs/giget) supports
 
 ```shell
-pnpx create-solana-dapp --template <github-org>/<github-repo>
+# npm
+npm create solana-dapp@latest -t <github-org>/<github-repo>
+
+# pnpm
+pnpm create solana-dapp@latest -t <github-org>/<github-repo>
+
+# yarn
+yarn create solana-dapp -t <github-org>/<github-repo>
 ```
 
 ## Init script
@@ -65,28 +82,16 @@ in the project.
 }
 ```
 
-### Planned frameworks to support
-
-The following UI frameworks are planned and expected to be supported in the future:
-
-- VueJS
-- Svelte
-- React Native
-
-## Supported on-chain program frameworks
-
-The following on-chain programs (aka smart contracts) frameworks are supported within `create-solana-dapp`:
-
-- Anchor
-
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
 
 ## Local development
 
-> [!TIP] This project uses [pnpm](https://pnpm.io/) as the package manager. If you don't have it, you can install it
-> using `corepack`:
+> [!TIP]
+>
+> This project uses [pnpm](https://pnpm.io/) as the package manager. If you don't have it, you can install it using
+> `corepack`:
 >
 > ```sh
 > corepack enable
@@ -96,7 +101,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for m
 To install the project locally, run the following commands:
 
 ```shell
-git clone https://github.com/solana-developers/create-solana-dapp.git
+git clone https://github.com/solana-foundation/create-solana-dapp.git
 cd create-solana-dapp
 pnpm install
 pnpm build

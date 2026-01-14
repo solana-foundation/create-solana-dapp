@@ -2,40 +2,29 @@
 
 The document has information for the maintainers of this package.
 
+## Changesets
+
+This repository uses [changesets](https://github.com/changesets/changesets) to control version bumps and generate a
+changelog (which will include each merged PR).
+
+To create a new changeset entry, run the following command and follow the prompts to select a semver tag and changelog
+entry:
+
+```shell
+changeset
+```
+
+After PRs are merged with a changeset entry, a bot will automatically create a "Version Packages" PR with a list of
+changes since the last published `latest` version. This version PR can be merged to auto update the package version
+number accordingly, publish the new version to npm with the `latest` tag, and update the changelog entry for the new
+version.
+
 ## Publishing new versions
 
-> Note: Your NPM cli must be logged into the NPM registry and have the correct permissions to publish a new version.
+New versions of `create-solana-dapp` are published via the GitHub Actions CI/CD.
 
-### `next` tag
+When a PR is merged to the `main` branch, a canary release will be published and tagged with `canary` with all the
+merged changes.
 
-The `next` tag is considered the beta/testing version of the `create-solana-dapp` tool, and the specific version will
-normally include such a `beta` flag in it:
-
-```shell
-pnpm version <x.y.z>
-pnpm release:next
-```
-
-This will allow anyone to use the current beta/next version of the CLI using the following command:
-
-```shell
-pnpx create-solana-dapp@next
-# Or use: npx create-solana-dapp@next / Yarn sadly can't do this with arbitrary tags.
-```
-
-### `latest` tag
-
-The `latest` tag is considered the production/stable version of the `create-solana-dapp` tool. To publish to the
-`latest` tag:
-
-```shell
-pnpm version <x.y.z>
-pnpm release
-```
-
-This will allow anyone to use the current production/stable version of the CLI using the following command:
-
-```shell
-pnpx create-solana-dapp@latest
-# Or use: npx create-solana-dapp@latest / yarn create solana-dapp
-```
+When the changeset bot generated "Version Packages" PR is merged, the `latest` version will be published via Github
+Actions.

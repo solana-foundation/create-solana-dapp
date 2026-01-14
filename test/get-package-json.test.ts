@@ -1,37 +1,40 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fs, vol } from 'memfs'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getPackageJson } from '../src/utils/get-package-json'
 
 vi.mock('node:fs')
 
 describe('getPackageJson', () => {
+  const targetDirectory = '/template'
+  const path = `${targetDirectory}/package.json`
+
   beforeEach(() => {
     vol.reset()
   })
 
   it('should throw an error when package.json does not exist', () => {
-    expect(() => getPackageJson('/template')).toThrow('No package.json found')
+    expect(() => getPackageJson(targetDirectory)).toThrow('No package.json found')
   })
 
   it('should throw an error when package.json is empty', () => {
-    fs.mkdirSync('/template')
-    fs.writeFileSync('/template/package.json', '')
+    fs.mkdirSync(targetDirectory)
+    fs.writeFileSync(path, '')
 
-    expect(() => getPackageJson('/template')).toThrow('Error loading package.json')
+    expect(() => getPackageJson(targetDirectory)).toThrow('Error loading package.json')
   })
 
   it('should throw an error when package.json cannot be parsed', () => {
-    fs.mkdirSync('/template')
-    fs.writeFileSync('/template/package.json', 'invalid json')
+    fs.mkdirSync(targetDirectory)
+    fs.writeFileSync(path, 'invalid json')
 
-    expect(() => getPackageJson('/template')).toThrow('Unexpected token \'i\', "invalid json" is not valid JSON')
+    expect(() => getPackageJson(targetDirectory)).toThrow('Unexpected token \'i\', "invalid json" is not valid JSON')
   })
 
   it('should throw an error when package.json does not match schema', () => {
-    fs.mkdirSync('/template')
-    fs.writeFileSync('/template/package.json', JSON.stringify({ scripts: 'data' }))
+    fs.mkdirSync(targetDirectory)
+    fs.writeFileSync(path, JSON.stringify({ scripts: 'data' }))
 
-    expect(() => getPackageJson('/template')).toThrow(`Invalid package.json: [
+    expect(() => getPackageJson(targetDirectory)).toThrow(`Invalid package.json: [
   {
     "code": "invalid_type",
     "expected": "object",
@@ -45,11 +48,29 @@ describe('getPackageJson', () => {
   })
 
   it('should return package.json content when file exists', () => {
-    const packageJson = { scripts: { dev: 'vite', start: 'node server.js' } }
+    const contents = { scripts: { dev: 'vite', start: 'node server.js' } }
 
-    fs.mkdirSync('/template')
-    fs.writeFileSync('/template/package.json', JSON.stringify(packageJson))
+    fs.mkdirSync(targetDirectory)
+    fs.writeFileSync(path, JSON.stringify(contents))
 
-    expect(getPackageJson('/template')).toEqual(packageJson)
+    expect(getPackageJson(targetDirectory)).toEqual({ contents, path })
+  })
+
+  it('should return package.json content with only a name', () => {
+    const contents = { name: 'my-app' }
+
+    fs.mkdirSync(targetDirectory)
+    fs.writeFileSync(path, JSON.stringify(contents))
+
+    expect(getPackageJson(targetDirectory)).toEqual({ contents, path })
+  })
+
+  it('should return package.json content a and parse name, scripts ignoring other fields', () => {
+    const contents = { name: 'my-app', scripts: { dev: 'vite', start: 'node server.js' }, version: '1.0.0' }
+
+    fs.mkdirSync(targetDirectory)
+    fs.writeFileSync(path, JSON.stringify(contents))
+
+    expect(getPackageJson(targetDirectory)).toEqual({ contents, path })
   })
 })

@@ -1,7 +1,0 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-pnpm verify-pnpm-lock
-pnpm sync-readmes --check
-pnpm sync-schemas --check
-pnpm lint-staged

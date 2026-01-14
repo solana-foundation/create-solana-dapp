@@ -11,12 +11,11 @@ export function createAppTaskInstallDependencies(args: GetArgsResult): Task {
   const { install, lockFile } = getPackageManagerCommand(pm, args.verbose)
   return {
     enabled: !args.skipInstall,
-    title: `Installing via ${pm}`,
     task: async (result) => {
       if (args.verbose) {
         log.warn(`Installing via ${pm}`)
       }
-      const deleteLockFiles = ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock']
+      const deleteLockFiles = ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock']
         // We don't want to delete the lock file for the current package manager
         .filter((item) => item !== lockFile)
         // We only want to delete the lock file if it exists
@@ -38,5 +37,6 @@ export function createAppTaskInstallDependencies(args: GetArgsResult): Task {
         taskFail(`init: Error installing dependencies: ${error}`)
       }
     },
+    title: `Installing via ${pm}`,
   }
 }

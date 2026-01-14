@@ -1,50 +1,55 @@
 import { isCancel, log, select, SelectOptions } from '@clack/prompts'
-import { Framework, frameworks } from '../templates/frameworks'
-import { getTemplatesForFramework, Template } from '../templates/templates'
 import { GetArgsResult } from './get-args-result'
+import { Template } from './template'
+import { MenuItem } from './template-schema'
 
-export function getPromptTemplate({ options }: { options: GetArgsResult }) {
+export function getPromptTemplate({ items, options }: { items: MenuItem[]; options: GetArgsResult }) {
   return async () => {
     if (options.template) {
       log.success(`Template: ${options.template.description}`)
       return options.template
     }
 
-    const framework: Framework = await selectFramework(frameworks)
-    if (isCancel(framework)) {
-      throw 'No framework selected'
+    const group: MenuItem = await selectGroup(items)
+    if (isCancel(group)) {
+      throw 'No group selected'
     }
 
-    return selectTemplate(getTemplatesForFramework(framework))
+    return selectTemplate(group.templates)
   }
 }
 
-function getFrameworkSelectOptions(
-  values: Framework[],
-): SelectOptions<{ value: Framework; label: string; hint?: string | undefined }[], Framework> {
+function getGroupSelectOptions(values: MenuItem[]): SelectOptions<
+  {
+    hint?: string | undefined
+    label: string
+    value: MenuItem
+  }[],
+  MenuItem
+> {
   return {
-    message: 'Select a framework',
+    message: 'Select a group',
     options: values.map((value) => ({
+      hint: value.description ?? '',
       label: value.name,
       value,
-      hint: value.description ?? '',
     })),
   }
 }
 
-function selectFramework(values: Framework[]): Promise<Framework> {
-  return select(getFrameworkSelectOptions(values)) as Promise<Framework>
+function selectGroup(values: MenuItem[]): Promise<MenuItem> {
+  return select(getGroupSelectOptions(values)) as Promise<MenuItem>
 }
 
 function getTemplateSelectOptions(
   values: Template[],
-): SelectOptions<{ value: Template; label: string; hint?: string | undefined }[], Template> {
+): SelectOptions<{ hint?: string | undefined; label: string; value: Template }[], Template> {
   return {
     message: 'Select a template',
     options: values.map((value) => ({
+      hint: value.description ?? '',
       label: value.name,
       value,
-      hint: value.description ?? '',
     })),
   }
 }

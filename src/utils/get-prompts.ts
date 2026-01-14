@@ -3,12 +3,13 @@ import * as process from 'node:process'
 import { GetArgsResult } from './get-args-result'
 import { getPromptName } from './get-prompt-name'
 import { getPromptTemplate } from './get-prompt-template'
+import { MenuItem } from './template-schema'
 
-export function getPrompts({ options }: { options: GetArgsResult }) {
+export function getPrompts({ items, options }: { items: MenuItem[]; options: GetArgsResult }) {
   return group(
     {
       name: getPromptName({ options }),
-      template: getPromptTemplate({ options }),
+      template: getPromptTemplate({ items, options }),
     },
     {
       onCancel: () => {

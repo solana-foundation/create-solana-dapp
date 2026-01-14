@@ -1,0 +1,25 @@
+name: Install Dependencies
+description: Sets up Node and its package manager, then installs all dependencies
+
+inputs:
+  version:
+    default: 'lts/*'
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Install package manager
+      uses: pnpm/action-setup@v3
+      with:
+        version: 10.15.1
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.version }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install

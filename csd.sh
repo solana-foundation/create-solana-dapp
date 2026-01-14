@@ -11,13 +11,13 @@
 # $ csd
 #
 # Create an app using a template and a random unique name:
-# $ csd gh:solana-developers/solana-templates/templates/template-node-express
+# $ csd gh:solana-foundation/templates/templates/template-node-express
 #
 # Create an app using a template and a specific name:
-# $ csd gh:solana-developers/solana-templates/templates/template-node-express my-api
+# $ csd gh:solana-foundation/templates/templates/template-node-express my-api
 #
 # Create an app using a template from a pull request number 35 (must be an active or recent PR):
-# $ csd gh:solana-developers/solana-templates/templates/template-node-express#refs/pull/35/merge
+# $ csd gh:solana-foundation/templates/templates/template-node-express#refs/pull/35/merge
 #
 # Create an app using create-solana-dapp@next
 # $ TAG=next csd
@@ -25,8 +25,15 @@
 # Create an app using a local create-solana-dapp command. Run `pnpm build:watch` in the create-solana-dapp directory to watch for changes.
 # $ CMD="node $HOME/path/to/create-solana-dapp/dist/bin/index.cjs --pnpm" csd
 #
+# Create an app using npx
+# $ CMD="npx -y create-solana-dapp@latest" csd
+#
+# Create an app using yarn
+# $ CMD="yarn create solana-dapp" csd
+#
 # TODO:
 # - add support for PARAMS env var to pass additional parameters to create-solana-dapp, like --pnpm or --skip-install
+# - add parameters or env vars to controll package manager
 
 # Set defaults for bash
 set -o errexit

@@ -28,10 +28,10 @@ Pull requests are the best way to propose changes to the codebase. We actively w
 In short, when you submit code changes, your submissions are understood to be under the same
 [MIT License](https://choosealicense.com/licenses/mit/) that covers the project.
 
-## Report bugs using GitHub's [issues](https://github.com/solana-developers/create-solana-dapp/issues)
+## Report bugs using GitHub's [issues](https://github.com/solana-foundation/create-solana-dapp/issues)
 
 We use GitHub issues to track public bugs. Report a bug by
-[opening a new issue](https://github.com/solana-developers/create-solana-dapp/issues/new); it's that easy!
+[opening a new issue](https://github.com/solana-foundation/create-solana-dapp/issues/new); it's that easy!
 
 **Great Bug Reports** tend to have:
 

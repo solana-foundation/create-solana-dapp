@@ -1,15 +1,16 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { z } from 'zod'
+import { z } from 'zod/v3'
+import { getPackageJsonPath } from './get-package-json-path'
+import { initScriptKey, InitScriptSchema } from './init-script-schema'
 
-export function getPackageJson(targetDirectory: string): PackageJson {
-  const packageJson = join(targetDirectory, 'package.json')
-  const exists = existsSync(packageJson)
+export function getPackageJson(targetDirectory: string): { contents: PackageJson; path: string } {
+  const path = getPackageJsonPath(targetDirectory)
+  const exists = existsSync(path)
   if (!exists) {
     throw new Error('No package.json found')
   }
 
-  const contents = readFileSync(packageJson, 'utf8')
+  const contents = readFileSync(path, 'utf8')
   if (!contents) {
     throw new Error('Error loading package.json')
   }
@@ -19,11 +20,15 @@ export function getPackageJson(targetDirectory: string): PackageJson {
     throw new Error(`Invalid package.json: ${parsed.error.message}`)
   }
 
-  return parsed.data
+  return { contents: parsed.data, path }
 }
 
-const PackageJsonSchema = z.object({
-  scripts: z.record(z.string()).optional(),
-})
+const PackageJsonSchema = z
+  .object({
+    [initScriptKey]: InitScriptSchema.optional(),
+    name: z.string().optional(),
+    scripts: z.record(z.string()).optional(),
+  })
+  .passthrough()
 
 export type PackageJson = z.infer<typeof PackageJsonSchema>

@@ -1,8 +1,10 @@
-import { getVersion, versionCommands } from './get-version'
+import { getVersion } from './get-version'
+import { getVersionCommand, getVersionCommandNames } from './get-version-command'
 
 export function listVersions() {
   console.log(`Installed versions:`)
-  for (const command of Object.keys(versionCommands)) {
-    console.log(`  ${versionCommands[command].name}: ${getVersion(command) ?? 'not installed'}`)
+  for (const command of getVersionCommandNames()) {
+    const cmd = getVersionCommand(command)
+    console.log(`  ${cmd.name}: ${getVersion(command) ?? 'not installed'}`)
   }
 }
