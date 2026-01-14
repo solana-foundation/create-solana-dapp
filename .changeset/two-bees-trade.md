@@ -2,4 +2,4 @@
 "create-solana-dapp": patch
 ---
 
-Ci create solana dapp
+Added CircleCI configuration for continuous integration.
