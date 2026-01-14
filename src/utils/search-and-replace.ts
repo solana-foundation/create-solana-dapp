@@ -1,7 +1,7 @@
 import { readdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-const EXCLUDED_DIRECTORIES = new Set(['dist', 'coverage', 'node_modules', '.git', '.github', 'tmp'])
+const EXCLUDED_DIRECTORIES = new Set(['dist', 'coverage', 'node_modules', '.git', 'tmp'])
 
 export async function searchAndReplace(
   rootFolder: string,
@@ -14,13 +14,6 @@ export async function searchAndReplace(
     throw new Error('fromStrings and toStrings arrays must have the same length')
   }
 
-  if (isVerbose) {
-    console.log(`searchAndReplace: ${rootFolder} Searching for ${fromStrings.join(', ')}`, {
-      rootFolder,
-      fromStrings,
-      toStrings,
-    })
-  }
   async function processFile(filePath: string): Promise<void> {
     try {
       const content = await readFile(filePath, 'utf8')
@@ -88,14 +81,8 @@ export async function searchAndReplace(
   }
 
   async function renamePaths(directoryPath: string): Promise<void> {
-    if (isVerbose) {
-      console.log(`searchAndReplace [renamePaths]: START Renaming paths in ${directoryPath}`)
-    }
     try {
       const entries = await readdir(directoryPath, { withFileTypes: true })
-      if (isVerbose) {
-        console.log(`searchAndReplace [renamePaths]: Renaming paths in ${directoryPath}`, { entries })
-      }
 
       for (const entry of entries) {
         if (EXCLUDED_DIRECTORIES.has(entry.name)) {
@@ -105,36 +92,17 @@ export async function searchAndReplace(
           continue
         }
 
-        if (isVerbose) {
-          console.log(`searchAndReplace [renamePaths] => Renaming ${entry.name} to ${entry.name}`)
-        }
         const oldPath = join(directoryPath, entry.name)
-        let newPath = oldPath
+        let newName = entry.name
 
         for (const [i, fromString] of fromStrings.entries()) {
-          if (directoryPath.endsWith(toStrings[i])) {
-            if (isVerbose) {
-              console.log(`searchAndReplace [renamePaths] => [${i}] Skipping ${fromString} with ${toStrings[i]}`)
-            }
-            continue
-          }
-          if (isVerbose) {
-            console.log(`searchAndReplace [renamePaths] => [${i}] Replacing ${fromString} with ${toStrings[i]}`)
-          }
-          newPath = newPath.replace(new RegExp(fromString, 'g'), toStrings[i])
-          if (isVerbose) {
-            console.log(`searchAndReplace [renamePaths] => [${i}] Renamed ${oldPath} -> ${newPath}`)
-          }
+          newName = newName.replace(new RegExp(fromString, 'g'), toStrings[i])
         }
 
+        const newPath = join(directoryPath, newName)
+
         if (oldPath !== newPath) {
-          if (isVerbose) {
-            console.log(`searchAndReplace [renamePaths] => Renaming ${oldPath} to ${newPath}`)
-          }
           if (!isDryRun) {
-            if (isVerbose) {
-              console.log(`searchAndReplace [renamePaths] => Renaming ${oldPath} to ${newPath}`)
-            }
             await rename(oldPath, newPath)
           }
           if (isVerbose) {
@@ -143,11 +111,8 @@ export async function searchAndReplace(
         }
 
         if (entry.isDirectory()) {
-          await renamePaths(newPath)
+          await renamePaths(entry.isDirectory() ? newPath : oldPath)
         }
-      }
-      if (isVerbose) {
-        console.log(`searchAndReplace [renamePaths]: END Renaming paths in ${directoryPath}`)
       }
     } catch (error) {
       console.error(`Error renaming paths in ${directoryPath}:`, error)
@@ -155,13 +120,7 @@ export async function searchAndReplace(
   }
 
   try {
-    if (isVerbose) {
-      console.log(`searchAndReplace: Processing directory ${rootFolder}`)
-    }
     await processDirectory(rootFolder)
-    if (isVerbose) {
-      console.log(`searchAndReplace: Renaming paths in ${rootFolder}`)
-    }
     await renamePaths(rootFolder)
     if (isVerbose) {
       console.log(isDryRun ? 'Dry run completed' : 'Search and replace completed')

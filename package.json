@@ -1,6 +1,6 @@
 {
   "name": "create-solana-dapp",
-  "version": "4.6.0",
+  "version": "4.8.2",
   "description": "The fastest way to create Solana apps",
   "repository": {
     "name": "solana-foundation/create-solana-dapp",
@@ -39,43 +39,52 @@
     "dev": "vitest dev",
     "docker:build": "docker build -t create-solana-dapp:latest .",
     "docker:run": "docker run --rm --name create-solana-dapp -v \"${PWD}/dist:/workspace/dist\" -it create-solana-dapp:latest",
-    "lint": "eslint . && prettier -c .",
-    "lint:fix": "automd && eslint . --fix && prettier -w .",
+    "lint": "eslint .",
+    "lint:fix": "automd && eslint . --fix",
     "prepublishOnly": "pnpm pkg delete devDependencies",
-    "publish-impl": "npm view $npm_package_name@$npm_package_version > /dev/null 2>&1 || pnpm publish --tag ${PUBLISH_TAG:-canary} --access public --no-git-checks",
+    "publish-impl": "npm view $npm_package_name@$npm_package_version > /dev/null 2>&1 || pnpm publish --tag ${PUBLISH_TAG:-latest} --access public --no-git-checks",
     "publish-packages": "pnpm prepublishOnly && pnpm publish-impl",
     "test": "pnpm lint && pnpm test:types && vitest run --coverage",
     "test:types": "tsc --noEmit --skipLibCheck"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.27.10",
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
     "@types/mock-fs": "^4.13.4",
-    "@types/node": "^22.13.1",
-    "@types/semver": "^7.5.8",
+    "@types/node": "^24.3.1",
+    "@types/semver": "^7.7.1",
     "@types/update-notifier": "^6.0.8",
-    "@vitest/coverage-v8": "^3.0.5",
-    "automd": "^0.3.12",
-    "eslint": "^9.20.0",
-    "eslint-config-unjs": "^0.4.2",
-    "memfs": "^4.17.2",
+    "@vitest/coverage-v8": "^3.2.4",
+    "automd": "^0.4.0",
+    "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-config-unjs": "^0.5.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-sort": "^4.0.0",
+    "lefthook": "^1.12.4",
+    "memfs": "^4.39.0",
     "mock-fs": "^5.5.0",
-    "prettier": "^3.4.2",
-    "typescript": "^5.6.0",
-    "unbuild": "^3.3.1",
-    "vitest": "^3.0.5"
+    "pkg-pr-new": "^0.0.59",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "unbuild": "^3.6.1",
+    "vitest": "^3.2.4"
   },
-  "packageManager": "pnpm@10.5.2",
+  "packageManager": "pnpm@10.15.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "lefthook"
+    ]
+  },
   "dependencies": {
-    "@beeman/repokit": "0.0.0-canary-20250801172233",
-    "@clack/prompts": "^0.11.0",
-    "commander": "^13.1.0",
-    "giget": "^1.2.4",
-    "is-in-ci": "^1.0.0",
-    "picocolors": "^1.1.1",
-    "semver": "^7.7.1",
-    "update-notifier": "^7.3.1",
-    "zod": "^3.24.1"
+    "@clack/prompts": "0.7.0",
+    "commander": "14.0.0",
+    "giget": "2.0.0",
+    "is-in-ci": "2.0.0",
+    "picocolors": "1.1.1",
+    "semver": "7.7.2",
+    "update-notifier": "7.3.1",
+    "zod": "4.1.5"
   },
   "contributors": [
     {
