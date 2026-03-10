@@ -12,7 +12,7 @@ export function createAppTaskInstallDevSkill(args: GetArgsResult): Task {
           log.warn(`Installing Solana dev skill`)
         }
         await execAndWait(
-          'npx -y skills add https://github.com/solana-foundation/solana-dev-skill --all -y',
+          'npx -y skills add https://github.com/solana-foundation/solana-dev-skill --skill "*" -y',
           args.targetDirectory,
         )
         return result({ message: 'Installed Solana dev skill' })
