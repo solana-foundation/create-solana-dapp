@@ -1,6 +1,7 @@
 import { createAppTaskCloneTemplate } from './create-app-task-clone-template'
 import { createAppTaskInitializeGit } from './create-app-task-initialize-git'
 import { createAppTaskInstallDependencies } from './create-app-task-install-dependencies'
+import { createAppTaskInstallDevSkill } from './create-app-task-install-dev-skill'
 import { createAppTaskRunInitScript } from './create-app-task-run-init-script'
 import { createAppTaskRunSetup } from './create-app-task-run-setup'
 import { GetArgsResult } from './get-args-result'
@@ -16,6 +17,8 @@ export async function createApp(args: GetArgsResult) {
     createAppTaskRunSetup(args),
     // Run the (optional) init script defined in package.json
     createAppTaskRunInitScript(args),
+    // Install the Solana dev skill for AI coding agents
+    createAppTaskInstallDevSkill(args),
     // Initialize git repository
     createAppTaskInitializeGit(args),
   ])
