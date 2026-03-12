@@ -15,8 +15,9 @@ on:
         type: boolean
 
 permissions:
-  contents: write  # Push tags, create releases
-  id-token: write  # npm provenance (OIDC)
+  contents: write       # Push tags, create releases
+  id-token: write       # npm provenance (OIDC)
+  pull-requests: write  # Comment on PRs
 
 # Prevent concurrent publishes
 concurrency:
