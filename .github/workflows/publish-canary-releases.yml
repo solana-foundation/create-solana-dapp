@@ -1,20 +1,30 @@
 name: Publish Canary Releases
 
 on:
-  workflow_dispatch:
-    branches:
-      - main
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+  id-token: write  # npm provenance (OIDC)
+
 env:
-  # See https://consoledonottrack.com/
   DO_NOT_TRACK: '1'
 
 jobs:
-  build-and-publish-snapshots-to-npm:
+  typescript-build:
+    uses: ./.github/workflows/typescript-build.yml
+
+  typescript-test:
+    uses: ./.github/workflows/typescript-test.yml
+
+  canary:
+    name: Publish Canary
     runs-on: ubuntu-latest
+    needs: [typescript-build, typescript-test]
+    env:
+      NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,26 +32,29 @@ jobs:
       - name: Install Dependencies
         uses: ./.github/workflows/actions/install-dependencies
 
-      - name: Run Test & Lint
-        run: pnpm test
-
-      - name: Run Build Step
+      - name: Build
         run: pnpm build
 
-      - name: Configure NPM token
-        run: |
-          pnpm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+      - name: Version as canary snapshot
+        run: pnpm changeset version --snapshot canary
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish Canary Release
-        run: |
-          pnpm pkg delete devDependencies
-          pnpm changeset version --snapshot canary
-          pnpm build
-          pnpm publish-packages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          PUBLISH_TAG: canary
+
+      - name: Rebuild with canary version
+        run: pnpm build
+
+      - name: Pack tarball
+        run: |
+          mkdir -p .npm-pack
+          pnpm pack --pack-destination .npm-pack
+          echo "Packed tarball:"
+          ls -la .npm-pack/
+
+      - name: Publish canary to npm
+        run: |
+          TARBALL=$(ls .npm-pack/*.tgz | head -1)
+          echo "Publishing ${TARBALL} with tag 'canary'..."
+          npm publish "$TARBALL" --access public --tag canary
+          echo "Published successfully"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

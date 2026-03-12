@@ -1,0 +1,24 @@
+name: TypeScript Build
+
+on:
+  workflow_call:
+
+env:
+  DO_NOT_TRACK: '1'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: ./.github/workflows/actions/install-dependencies
+
+      - name: Build
+        run: pnpm build
+
+      - name: Type check
+        run: pnpm test:types
