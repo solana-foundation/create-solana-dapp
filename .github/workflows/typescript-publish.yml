@@ -1,6 +1,9 @@
-name: Publish TypeScript Packages (Manual)
+name: Publish TypeScript Packages
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       publish-to-npm:
@@ -53,6 +56,35 @@ jobs:
       - name: Install Dependencies
         uses: ./.github/workflows/actions/install-dependencies
 
+      - name: Setup npm registry auth
+        uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Determine publish type
+        id: publish-type
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "type=canary" >> $GITHUB_OUTPUT
+            echo "Publish type: canary (push to main)"
+          else
+            echo "type=release" >> $GITHUB_OUTPUT
+            echo "Publish type: release (manual dispatch)"
+          fi
+
+      # --- Canary: snapshot version via changesets ---
+      - name: Version as canary snapshot
+        if: steps.publish-type.outputs.type == 'canary'
+        run: pnpm changeset version --snapshot canary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run type check
+        run: pnpm test:types
+
       - name: Get version
         id: version
         run: |
@@ -60,23 +92,24 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Publishing version: $VERSION"
 
-      - name: Check if prerelease
-        id: prerelease
+      - name: Determine npm tag
+        id: npm-tag
         run: |
-          if [[ "${{ steps.version.outputs.version }}" == *"-"* ]]; then
+          TYPE="${{ steps.publish-type.outputs.type }}"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if [ "$TYPE" == "canary" ]; then
+            echo "npm_tag=canary" >> $GITHUB_OUTPUT
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          elif [[ "$VERSION" == *"-"* ]]; then
             echo "npm_tag=beta" >> $GITHUB_OUTPUT
-            echo "Pre-release version detected, using 'beta' npm tag"
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
           else
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
             echo "npm_tag=latest" >> $GITHUB_OUTPUT
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build
-        run: pnpm build
-
-      - name: Run type check
-        run: pnpm test:types
+          echo "npm tag: $(grep npm_tag $GITHUB_OUTPUT | tail -1)"
 
       - name: Pack tarball
         run: |
@@ -116,7 +149,9 @@ jobs:
             echo "All required dist/ artifacts present"
           done
 
+      # --- Release only: tag + GitHub release ---
       - name: Create and push tag
+        if: steps.publish-type.outputs.type == 'release'
         run: |
           TAG="v${{ steps.version.outputs.version }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
@@ -128,27 +163,24 @@ jobs:
           git push origin "$TAG" 2>/dev/null || echo "Tag already pushed"
 
       - name: Publish to npm
-        if: ${{ github.event.inputs.publish-to-npm == 'true' }}
+        if: steps.publish-type.outputs.type == 'canary' || github.event.inputs.publish-to-npm == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          NPM_TAG="${{ steps.prerelease.outputs.npm_tag }}"
-          TARBALL=".npm-pack/create-solana-dapp-${VERSION}.tgz"
+          NPM_TAG="${{ steps.npm-tag.outputs.npm_tag }}"
+          TARBALL=$(ls .npm-pack/*.tgz | head -1)
 
           if [ -f "$TARBALL" ]; then
             echo "Publishing ${TARBALL} with tag '${NPM_TAG}'..."
             npm publish "$TARBALL" --access public --tag "$NPM_TAG"
             echo "Published successfully"
           else
-            echo "Tarball not found: ${TARBALL}"
-            echo "Available tarballs:"
+            echo "Tarball not found. Available:"
             ls -la .npm-pack/ || true
             exit 1
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
-        if: ${{ github.event.inputs.create-github-release == 'true' }}
+        if: steps.publish-type.outputs.type == 'release' && github.event.inputs.create-github-release == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -156,7 +188,7 @@ jobs:
             const tagName = `v${{ steps.version.outputs.version }}`;
             const version = `${{ steps.version.outputs.version }}`;
             const releaseName = `create-solana-dapp v${version}`;
-            const isPrerelease = '${{ steps.prerelease.outputs.is_prerelease }}' === 'true';
+            const isPrerelease = '${{ steps.npm-tag.outputs.is_prerelease }}' === 'true';
 
             const body = `## create-solana-dapp v${version}
 
@@ -194,29 +226,34 @@ jobs:
 
       - name: Publish summary
         run: |
+          TYPE="${{ steps.publish-type.outputs.type }}"
           VERSION="${{ steps.version.outputs.version }}"
-          NPM_TAG="${{ steps.prerelease.outputs.npm_tag }}"
+          NPM_TAG="${{ steps.npm-tag.outputs.npm_tag }}"
 
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## TypeScript Package Published
 
+          **Type**: \`${TYPE}\`
           **Version**: \`${VERSION}\`
           **Package**: \`create-solana-dapp\`
-          **Tag**: \`v${VERSION}\`
           **npm tag**: \`${NPM_TAG}\`
 
           EOF
 
-          if [ "${{ github.event.inputs.publish-to-npm }}" == "true" ]; then
-            echo "Published to npm: https://www.npmjs.com/package/create-solana-dapp/v/${VERSION}" >> $GITHUB_STEP_SUMMARY
+          if [ "$TYPE" == "canary" ]; then
+            echo "Canary published to npm: \`create-solana-dapp@${NPM_TAG}\`" >> $GITHUB_STEP_SUMMARY
           else
-            echo "Skipped npm publish (dry run)" >> $GITHUB_STEP_SUMMARY
-          fi
+            if [ "${{ github.event.inputs.publish-to-npm }}" == "true" ]; then
+              echo "Published to npm: https://www.npmjs.com/package/create-solana-dapp/v/${VERSION}" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "Skipped npm publish (dry run)" >> $GITHUB_STEP_SUMMARY
+            fi
 
-          if [ "${{ github.event.inputs.create-github-release }}" == "true" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "GitHub release created: https://github.com/${{ github.repository }}/releases/tag/v${VERSION}" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Skipped GitHub release creation" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ github.event.inputs.create-github-release }}" == "true" ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "GitHub release created: https://github.com/${{ github.repository }}/releases/tag/v${VERSION}" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Skipped GitHub release creation" >> $GITHUB_STEP_SUMMARY
+            fi
           fi
