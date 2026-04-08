@@ -4,23 +4,9 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      publish-to-npm:
-        description: 'Publish to npm registry'
-        required: true
-        default: true
-        type: boolean
-      create-github-release:
-        description: 'Create GitHub release'
-        required: true
-        default: true
-        type: boolean
 
 permissions:
-  contents: write       # Push tags, create releases
-  id-token: write       # npm provenance (OIDC)
-  pull-requests: write  # Comment on PRs
+  contents: read
 
 # Prevent concurrent publishes
 concurrency:
@@ -34,13 +20,91 @@ jobs:
   typescript-test:
     uses: ./.github/workflows/typescript-test.yml
 
-  publish:
-    name: Publish create-solana-dapp
+  # ── Publish canary snapshot on every push to main ──
+  canary:
+    name: Publish Canary
     runs-on: ubuntu-latest
     needs: [typescript-build, typescript-test]
+    permissions:
+      contents: read
+      id-token: write     # npm provenance (OIDC)
     env:
       NPM_CONFIG_PROVENANCE: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Install Dependencies
+        uses: ./.github/workflows/actions/install-dependencies
+
+      - name: Setup npm registry auth
+        uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check for changesets
+        id: check
+        run: |
+          if [ ! -d .changeset ]; then
+            echo "::error::.changeset directory not found"
+            exit 1
+          fi
+          # Only publish canary if there are real changeset entries (not just README.md)
+          if find .changeset -name '*.md' ! -name 'README.md' | grep -q .; then
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "Changesets found, will publish canary"
+          else
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "No changesets found, skipping canary publish"
+          fi
+
+      - name: Build
+        if: steps.check.outputs.has_changesets == 'true'
+        run: pnpm build
+
+      - name: Version as canary snapshot
+        if: steps.check.outputs.has_changesets == 'true'
+        run: pnpm changeset version --snapshot canary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rebuild with canary version
+        if: steps.check.outputs.has_changesets == 'true'
+        run: pnpm build
+
+      - name: Pack tarball
+        if: steps.check.outputs.has_changesets == 'true'
+        run: |
+          mkdir -p .npm-pack
+          pnpm pack --pack-destination .npm-pack
+          echo "Packed tarball:"
+          ls -la .npm-pack/
+
+      - name: Publish canary to npm
+        if: steps.check.outputs.has_changesets == 'true'
+        run: |
+          TARBALL_COUNT=$(ls .npm-pack/*.tgz 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$TARBALL_COUNT" -ne 1 ]; then
+            echo "::error::Expected exactly 1 tarball in .npm-pack, found $TARBALL_COUNT"
+            ls -la .npm-pack/
+            exit 1
+          fi
+          TARBALL=$(ls .npm-pack/*.tgz)
+          echo "Publishing ${TARBALL} with tag 'canary'..."
+          npm publish "$TARBALL" --access public --tag canary
+          echo "Published successfully"
+
+  # ── Create version PR, or publish release when version PR is merged ──
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [typescript-build, typescript-test]
+    permissions:
+      contents: write       # Push tags, create releases, changesets PR
+      id-token: write       # npm provenance (OIDC)
+      pull-requests: write  # Changesets PR
+    env:
+      NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -61,97 +125,41 @@ jobs:
         with:
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Determine publish type
-        id: publish-type
-        run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
-            echo "type=canary" >> $GITHUB_OUTPUT
-            echo "Publish type: canary (push to main)"
-          else
-            echo "type=release" >> $GITHUB_OUTPUT
-            echo "Publish type: release (manual dispatch)"
-          fi
-
-      # --- Canary: snapshot version via changesets ---
-      - name: Version as canary snapshot
-        if: steps.publish-type.outputs.type == 'canary'
-        run: pnpm changeset version --snapshot canary
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build
         run: pnpm build
 
       - name: Run type check
         run: pnpm test:types
 
-      - name: Get version
+      - name: Create version PR or publish
+        id: changesets
+        uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba # v1.5.3
+        with:
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+          publish: pnpm publish-packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_TAG: latest
+
+      - name: Get published version
+        if: steps.changesets.outputs.published == 'true'
         id: version
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Publishing version: $VERSION"
-
-      - name: Determine npm tag
-        id: npm-tag
-        run: |
-          TYPE="${{ steps.publish-type.outputs.type }}"
-          VERSION="${{ steps.version.outputs.version }}"
-
-          if [ "$TYPE" == "canary" ]; then
-            echo "npm_tag=canary" >> $GITHUB_OUTPUT
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          elif [[ "$VERSION" == *"-"* ]]; then
-            echo "npm_tag=beta" >> $GITHUB_OUTPUT
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "npm_tag=latest" >> $GITHUB_OUTPUT
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          VERSION=$(echo '${{ steps.changesets.outputs.publishedPackages }}' | node -e "
+            const pkgs = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+            const pkg = pkgs.find(p => p.name === 'create-solana-dapp');
+            if (pkg) console.log(pkg.version);
+          ")
+          if [ -z "$VERSION" ]; then
+            echo "::error::Failed to extract version from publishedPackages output"
+            exit 1
           fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Published version: $VERSION"
 
-          echo "npm tag: $(grep npm_tag $GITHUB_OUTPUT | tail -1)"
-
-      - name: Pack tarball
-        run: |
-          mkdir -p .npm-pack
-          pnpm pack --pack-destination .npm-pack
-          echo ""
-          echo "Packed tarball:"
-          ls -la .npm-pack/
-
-      - name: 'Guard - Fail if tarball missing dist/ artifacts'
-        run: |
-          echo "Checking tarball for dist/ artifacts..."
-
-          for tarball in .npm-pack/*.tgz; do
-            CONTENTS=$(tar -tzf "$tarball")
-
-            if ! echo "$CONTENTS" | grep -q "package/dist/index.mjs"; then
-              echo "FAIL: ${tarball} is missing dist/index.mjs!"
-              exit 1
-            fi
-
-            if ! echo "$CONTENTS" | grep -q "package/dist/index.cjs"; then
-              echo "FAIL: ${tarball} is missing dist/index.cjs!"
-              exit 1
-            fi
-
-            if ! echo "$CONTENTS" | grep -q "package/dist/index.d.ts"; then
-              echo "FAIL: ${tarball} is missing dist/index.d.ts!"
-              exit 1
-            fi
-
-            if ! echo "$CONTENTS" | grep -q "package/dist/bin/index.cjs"; then
-              echo "FAIL: ${tarball} is missing dist/bin/index.cjs (CLI entrypoint)!"
-              exit 1
-            fi
-
-            echo "All required dist/ artifacts present"
-          done
-
-      # --- Release only: tag + GitHub release ---
       - name: Create and push tag
-        if: steps.publish-type.outputs.type == 'release'
+        if: steps.changesets.outputs.published == 'true'
         run: |
           TAG="v${{ steps.version.outputs.version }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
@@ -160,35 +168,18 @@ jobs:
             git tag "$TAG"
             echo "Created tag $TAG"
           fi
-          git push origin "$TAG" 2>/dev/null || echo "Tag already pushed"
-
-      - name: Publish to npm
-        if: steps.publish-type.outputs.type == 'canary' || github.event.inputs.publish-to-npm == 'true'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          NPM_TAG="${{ steps.npm-tag.outputs.npm_tag }}"
-          TARBALL=$(ls .npm-pack/*.tgz | head -1)
-
-          if [ -f "$TARBALL" ]; then
-            echo "Publishing ${TARBALL} with tag '${NPM_TAG}'..."
-            npm publish "$TARBALL" --access public --tag "$NPM_TAG"
-            echo "Published successfully"
-          else
-            echo "Tarball not found. Available:"
-            ls -la .npm-pack/ || true
-            exit 1
-          fi
+          git push origin "$TAG"
 
       - name: Create GitHub Release
-        if: steps.publish-type.outputs.type == 'release' && github.event.inputs.create-github-release == 'true'
+        if: steps.changesets.outputs.published == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const tagName = `v${{ steps.version.outputs.version }}`;
-            const version = `${{ steps.version.outputs.version }}`;
+            const version = '${{ steps.version.outputs.version }}';
+            const tagName = `v${version}`;
             const releaseName = `create-solana-dapp v${version}`;
-            const isPrerelease = '${{ steps.npm-tag.outputs.is_prerelease }}' === 'true';
+            const isPrerelease = version.includes('-');
 
             const body = `## create-solana-dapp v${version}
 
@@ -225,35 +216,18 @@ jobs:
             console.log(`Created release: ${releaseName}`);
 
       - name: Publish summary
+        if: steps.changesets.outputs.published == 'true'
         run: |
-          TYPE="${{ steps.publish-type.outputs.type }}"
           VERSION="${{ steps.version.outputs.version }}"
-          NPM_TAG="${{ steps.npm-tag.outputs.npm_tag }}"
 
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## TypeScript Package Published
 
-          **Type**: \`${TYPE}\`
           **Version**: \`${VERSION}\`
           **Package**: \`create-solana-dapp\`
-          **npm tag**: \`${NPM_TAG}\`
+          **Tag**: \`v${VERSION}\`
+          **npm tag**: \`latest\`
 
+          Published to npm: https://www.npmjs.com/package/create-solana-dapp/v/${VERSION}
+          GitHub release: https://github.com/${{ github.repository }}/releases/tag/v${VERSION}
           EOF
-
-          if [ "$TYPE" == "canary" ]; then
-            echo "Canary published to npm: \`create-solana-dapp@${NPM_TAG}\`" >> $GITHUB_STEP_SUMMARY
-          else
-            if [ "${{ github.event.inputs.publish-to-npm }}" == "true" ]; then
-              echo "Published to npm: https://www.npmjs.com/package/create-solana-dapp/v/${VERSION}" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "Skipped npm publish (dry run)" >> $GITHUB_STEP_SUMMARY
-            fi
-
-            if [ "${{ github.event.inputs.create-github-release }}" == "true" ]; then
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "GitHub release created: https://github.com/${{ github.repository }}/releases/tag/v${VERSION}" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "Skipped GitHub release creation" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
