@@ -55,6 +55,17 @@ describe('searchAndReplace', () => {
     await expect(access(join(tempDir, 'oldname.txt'))).rejects.toThrow()
   })
 
+  it('should treat search values as literal strings', async () => {
+    await writeFile(join(tempDir, 'foo.bar.txt'), 'foo.bar fooXbar')
+    await writeFile(join(tempDir, 'fooXbar.txt'), 'fooXbar')
+
+    await searchAndReplace(tempDir, ['foo.bar'], ['baz'], false, false)
+
+    expect(await readFile(join(tempDir, 'baz.txt'), 'utf8')).toBe('baz fooXbar')
+    expect(await readFile(join(tempDir, 'fooXbar.txt'), 'utf8')).toBe('fooXbar')
+    await expect(access(join(tempDir, 'foo.bar.txt'))).rejects.toThrow()
+  })
+
   it('should exclude directories like node_modules and .git from processing', async () => {
     const consoleLogSpy = vi.spyOn(console, 'log')
 

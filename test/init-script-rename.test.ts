@@ -19,7 +19,7 @@ vi.mock('@clack/prompts', () => ({
 }))
 
 describe('initScriptRename', () => {
-  const packageJsonName = 'template-project'
+  const packageJsonName = 'foo-bar'
 
   const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -50,11 +50,31 @@ describe('initScriptRename', () => {
   }
 
   it('should rename the project based on package.json name', async () => {
-    const args = { ...baseArgs }
+    const args = { ...baseArgs, name: 'my-app' }
 
     await initScriptRename(args)
 
-    expect(searchAndReplace).toHaveBeenCalledWith(args.targetDirectory, [packageJsonName], [args.name], false, false)
+    expect(searchAndReplace).toHaveBeenCalledWith(
+      args.targetDirectory,
+      ['FooBar', 'foo-bar', 'foo_bar', 'foobar'],
+      ['MyApp', 'my-app', 'my_app', 'myapp'],
+      false,
+      false,
+    )
+  })
+
+  it('should use dry run mode when replacing the project name from package.json', async () => {
+    const args = { ...baseArgs, dryRun: true }
+
+    await initScriptRename(args)
+
+    expect(searchAndReplace).toHaveBeenCalledWith(
+      args.targetDirectory,
+      expect.any(Array),
+      expect.any(Array),
+      true,
+      false,
+    )
   })
 
   it('should return early if no rename object is provided', async () => {
