@@ -1,18 +1,88 @@
-name: Version Packages
+name: Version & Publish Packages
+
+concurrency:
+  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
+  id-token: write
   pull-requests: write
 
 jobs:
-  version:
-    name: Create Version PR
+  check-changesets:
+    name: Check Changesets
     runs-on: ubuntu-latest
+    outputs:
+      has_changesets: ${{ steps.check.outputs.has_changesets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for changesets
+        id: check
+        run: |
+          if ls .changeset/*.md 2>/dev/null | grep -qv 'README.md'; then
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+          fi
+
+  publish:
+    name: Version & Publish
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_PROVENANCE: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        uses: ./.github/workflows/actions/install-dependencies
+
+      - name: Build
+        run: pnpm build
+
+      - name: Type check
+        run: pnpm test:types
+
+      - name: Validate package
+        run: pnpm exec publint --pack pnpm
+
+      - name: Setup npm registry auth
+        uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Create Changesets Pull Request or Publish
+        uses: changesets/action@v1
+        with:
+          commit: 'chore: version packages'
+          publish: pnpm publish-packages
+          title: 'chore: version packages'
+          version: pnpm changeset version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  canary:
+    name: Publish Canary
+    if: github.ref == 'refs/heads/main' && needs.check-changesets.outputs.has_changesets == 'true'
+    needs: check-changesets
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,10 +90,22 @@ jobs:
       - name: Install Dependencies
         uses: ./.github/workflows/actions/install-dependencies
 
-      - name: Create Changesets Pull Request
-        uses: changesets/action@v1
+      - name: Build
+        run: pnpm build
+
+      - name: Type check
+        run: pnpm test:types
+
+      - name: Create canary version
+        run: pnpm changeset version --snapshot canary
+
+      - name: Validate package
+        run: pnpm exec publint --pack pnpm
+
+      - name: Setup npm registry auth
+        uses: actions/setup-node@v4
         with:
-          title: 'chore: version packages'
-          commit: 'chore: version packages'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish canary to NPM
+        run: pnpm changeset publish --tag canary
