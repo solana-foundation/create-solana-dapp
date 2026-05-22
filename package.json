@@ -66,6 +66,7 @@
     "mock-fs": "^5.5.0",
     "pkg-pr-new": "^0.0.59",
     "prettier": "^3.6.2",
+    "publint": "0.3.21",
     "typescript": "^5.9.2",
     "unbuild": "^3.6.1",
     "vitest": "^3.2.4"
