@@ -11,10 +11,10 @@ export function getMenuConfig(): MenuConfig {
       name: 'Kit Framework',
     },
     {
-      description: 'Solana Mobile Templates based on Expo',
+      description: 'Solana Mobile Templates',
       groups: ['mobile'],
       id: 'solana-mobile',
-      keywords: ['expo'],
+      keywords: [],
       name: 'Solana Mobile',
     },
     {
