@@ -98,6 +98,8 @@ jobs:
 
       - name: Create canary version
         run: pnpm changeset version --snapshot canary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate package
         run: pnpm exec publint --pack pnpm
