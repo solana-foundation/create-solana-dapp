@@ -1,5 +1,13 @@
 # create-solana-dapp
 
+## 4.8.6
+
+### Patch Changes
+
+- [#249](https://github.com/solana-foundation/create-solana-dapp/pull/249)
+  [`41835c6`](https://github.com/solana-foundation/create-solana-dapp/commit/41835c630495c44ef49893e3221b83f5d0031ac2)
+  Thanks [@beeman](https://github.com/beeman)! - Show all Solana Mobile templates in the mobile template prompt.
+
 ## 4.8.5
 
 ### Patch Changes
