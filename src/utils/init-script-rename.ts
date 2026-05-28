@@ -7,6 +7,65 @@ import { InitScriptRename } from './init-script-schema'
 import { searchAndReplace } from './search-and-replace'
 import { namesValues } from './vendor/names'
 
+function compareReplacement(fromA: string, fromB: string): number {
+  if (fromA < fromB) {
+    return -1
+  }
+  if (fromA > fromB) {
+    return 1
+  }
+  return 0
+}
+
+function getNameSegments(name: string): string[] {
+  return name
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+    .split(/[^A-Za-z\d]+/)
+    .filter(Boolean)
+}
+
+function toCompactName(name: string): string {
+  return getNameSegments(name).join('').toLowerCase()
+}
+
+function toKebabName(name: string): string {
+  return getNameSegments(name).join('-').toLowerCase()
+}
+
+function toPascalName(name: string): string {
+  return getNameSegments(name)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .join('')
+}
+
+function toSnakeName(name: string): string {
+  return getNameSegments(name).join('_').toLowerCase()
+}
+
+function packageNameReplacementValues(from: string, to: string): { fromNames: string[]; toNames: string[] } {
+  const replacements = new Map<string, string>()
+  const variantReplacements = [
+    [from, to],
+    [toCompactName(from), toCompactName(to)],
+    [toKebabName(from), toKebabName(to)],
+    [toPascalName(from), toPascalName(to)],
+    [toSnakeName(from), toSnakeName(to)],
+  ]
+
+  for (const [fromName, toName] of variantReplacements) {
+    if (fromName && !replacements.has(fromName)) {
+      replacements.set(fromName, toName)
+    }
+  }
+
+  const sortedReplacements = [...replacements.entries()].sort(([fromA], [fromB]) => compareReplacement(fromA, fromB))
+
+  return {
+    fromNames: sortedReplacements.map(([fromName]) => fromName),
+    toNames: sortedReplacements.map(([, toName]) => toName),
+  }
+}
+
 export async function initScriptRename(args: GetArgsResult, rename?: InitScriptRename, verbose = false) {
   const tag = `initScriptRename`
   const { contents } = getPackageJson(args.targetDirectory)
@@ -15,7 +74,8 @@ export async function initScriptRename(args: GetArgsResult, rename?: InitScriptR
     if (args.verbose) {
       log.warn(`${tag}: renaming template name '${contents.name}' to project name '${args.name}'`)
     }
-    await searchAndReplace(args.targetDirectory, [contents.name], [args.name], false, verbose)
+    const { fromNames, toNames } = packageNameReplacementValues(contents.name, args.name)
+    await searchAndReplace(args.targetDirectory, fromNames, toNames, args.dryRun, verbose)
   }
 
   // Return early if there are no renames defined in the init script
