@@ -4,10 +4,13 @@ import { createAppTaskInstallDependencies } from './create-app-task-install-depe
 import { createAppTaskInstallDevSkill } from './create-app-task-install-dev-skill'
 import { createAppTaskRunInitScript } from './create-app-task-run-init-script'
 import { createAppTaskRunSetup } from './create-app-task-run-setup'
-import { GetArgsResult } from './get-args-result'
+import { type GetArgsResult } from './get-args-result'
 import { tasks } from './vendor/clack-tasks'
 
-export async function createApp(args: GetArgsResult) {
+export type CreateAppArgs = GetArgsResult
+export type CreateAppResult = string[]
+
+export async function createApp(args: CreateAppArgs): Promise<CreateAppResult> {
   return tasks([
     // Clone the template to the target directory
     createAppTaskCloneTemplate(args),
