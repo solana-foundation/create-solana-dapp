@@ -72,6 +72,9 @@ in the project.
         "paths": ["anchor", "src"],
       },
     },
+    // Optional. If omitted, the default Solana dev skill is installed.
+    // Set to [] to skip skill installation, or provide one or more skill repo URLs to replace the default.
+    "skills": ["https://github.com/org/skill-repo"],
     // Check versions and give a warning if it's not installed or the version is lower
     "versions": {
       "adb": "33.0.0",

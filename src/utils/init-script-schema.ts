@@ -5,6 +5,8 @@ export const initScriptKey = 'create-solana-dapp'
 
 export const InitScriptSchemaInstructions = z.array(z.string())
 
+export const InitScriptSchemaSkills = z.array(z.string())
+
 export const InitScriptSchemaVersions = z.object({
   adb: z.string().optional(),
   anchor: z.string().optional(),
@@ -22,9 +24,11 @@ export const InitScriptSchemaRename = z.record(
 export const InitScriptSchema = z.object({
   instructions: InitScriptSchemaInstructions.optional(),
   rename: InitScriptSchemaRename.optional(),
+  skills: InitScriptSchemaSkills.optional(),
   versions: InitScriptSchemaVersions.optional(),
 })
 
 export type InitScriptInstructions = z.infer<typeof InitScriptSchemaInstructions>
 export type InitScriptRename = z.infer<typeof InitScriptSchemaRename>
+export type InitScriptSkills = z.infer<typeof InitScriptSchemaSkills>
 export type InitScriptVersions = z.infer<typeof InitScriptSchemaVersions>
