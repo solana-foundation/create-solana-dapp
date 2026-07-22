@@ -72,6 +72,7 @@ describe('getArgs', () => {
     expect(promptName).toBe('')
     expect(promptTemplate).toBe(template)
     expect(args.name).toBe('prompted-app')
+    expect(args.packageManagerExplicit).toBe(false)
     expect(args.targetDirectory).toBe(`${process.cwd()}/prompted-app`)
     expect(runVersionCheck).not.toHaveBeenCalled()
   })
@@ -99,6 +100,7 @@ describe('getArgs', () => {
       dryRun: false,
       name: 'my-app',
       packageManager: 'pnpm',
+      packageManagerExplicit: true,
       skipGit: true,
       skipInit: true,
       skipInstall: true,

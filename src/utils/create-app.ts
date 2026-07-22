@@ -5,24 +5,33 @@ import { createAppTaskInstallDevSkill } from './create-app-task-install-dev-skil
 import { createAppTaskRunInitScript } from './create-app-task-run-init-script'
 import { createAppTaskRunSetup } from './create-app-task-run-setup'
 import { type GetArgsResult } from './get-args-result'
+import { initScriptPackageManager } from './init-script-package-manager'
 import { tasks } from './vendor/clack-tasks'
 
 export type CreateAppArgs = GetArgsResult
 export type CreateAppResult = string[]
 
 export async function createApp(args: CreateAppArgs): Promise<CreateAppResult> {
-  return tasks([
+  const instructions = await tasks([
     // Clone the template to the target directory
     createAppTaskCloneTemplate(args),
-    // Install the dependencies
-    createAppTaskInstallDependencies(args),
-    // Run the (optional) setup script defined in package.json (e.g. build anchor program)
-    createAppTaskRunSetup(args),
-    // Install skills for AI coding agents
-    createAppTaskInstallDevSkill(args),
-    // Run the (optional) init script defined in package.json
-    createAppTaskRunInitScript(args),
-    // Initialize git repository
-    createAppTaskInitializeGit(args),
   ])
+
+  initScriptPackageManager(args)
+
+  return [
+    ...instructions,
+    ...(await tasks([
+      // Install the dependencies
+      createAppTaskInstallDependencies(args),
+      // Run the (optional) setup script defined in package.json (e.g. build anchor program)
+      createAppTaskRunSetup(args),
+      // Install skills for AI coding agents
+      createAppTaskInstallDevSkill(args),
+      // Run the (optional) init script defined in package.json
+      createAppTaskRunInitScript(args),
+      // Initialize git repository
+      createAppTaskInitializeGit(args),
+    ])),
+  ]
 }

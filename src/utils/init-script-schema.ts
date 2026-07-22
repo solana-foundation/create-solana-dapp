@@ -1,9 +1,12 @@
 import { z } from 'zod/v3'
+import { packageManagers } from './vendor/package-manager'
 
 // This is the key used in package.json to store the init script
 export const initScriptKey = 'create-solana-dapp'
 
 export const InitScriptSchemaInstructions = z.array(z.string())
+
+export const InitScriptSchemaPackageManager = z.enum(packageManagers)
 
 export const InitScriptSchemaSkills = z.array(z.string())
 
@@ -23,12 +26,14 @@ export const InitScriptSchemaRename = z.record(
 
 export const InitScriptSchema = z.object({
   instructions: InitScriptSchemaInstructions.optional(),
+  packageManager: InitScriptSchemaPackageManager.optional(),
   rename: InitScriptSchemaRename.optional(),
   skills: InitScriptSchemaSkills.optional(),
   versions: InitScriptSchemaVersions.optional(),
 })
 
 export type InitScriptInstructions = z.infer<typeof InitScriptSchemaInstructions>
+export type InitScriptPackageManager = z.infer<typeof InitScriptSchemaPackageManager>
 export type InitScriptRename = z.infer<typeof InitScriptSchemaRename>
 export type InitScriptSkills = z.infer<typeof InitScriptSchemaSkills>
 export type InitScriptVersions = z.infer<typeof InitScriptSchemaVersions>
