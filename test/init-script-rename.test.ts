@@ -63,6 +63,54 @@ describe('initScriptRename', () => {
     )
   })
 
+  it('should rename spaced display names to project display names', async () => {
+    const args = { ...baseArgs, name: 'my-unicorn2' }
+    const fromNames = ['ExampleApp', 'EXAMPLE_APP', 'example-app', 'Example App', 'exampleApp']
+    const rename = {
+      'Example App': {
+        paths: ['app.json'],
+        to: '{{name}}',
+      },
+    }
+    const toNames = ['MyUnicorn2', 'MY_UNICORN2', 'my-unicorn2', 'my-unicorn2', 'myUnicorn2']
+    vi.mocked(namesValues).mockImplementation((name) => (name === 'Example App' ? fromNames : toNames))
+    vi.mocked(ensureTargetPath).mockResolvedValue(true)
+
+    await initScriptRename(args, rename)
+
+    expect(searchAndReplace).toHaveBeenLastCalledWith(
+      '/template/app.json',
+      fromNames,
+      ['MyUnicorn2', 'MY_UNICORN2', 'my-unicorn2', 'My Unicorn2', 'myUnicorn2'],
+      false,
+      false,
+    )
+  })
+
+  it('should rename spaced display names using the real names output', async () => {
+    const args = { ...baseArgs, name: 'my-unicorn2' }
+    const { namesValues: actualNamesValues } =
+      await vi.importActual<typeof import('../src/utils/vendor/names')>('../src/utils/vendor/names')
+    const rename = {
+      'Example App': {
+        paths: ['app.json'],
+        to: '{{name}}',
+      },
+    }
+    vi.mocked(namesValues).mockImplementation(actualNamesValues)
+    vi.mocked(ensureTargetPath).mockResolvedValue(true)
+
+    await initScriptRename(args, rename)
+
+    expect(searchAndReplace).toHaveBeenLastCalledWith(
+      '/template/app.json',
+      ['ExampleApp', 'EXAMPLE_APP', 'example-app', 'Example App', 'exampleApp'],
+      ['MyUnicorn2', 'MY_UNICORN2', 'my-unicorn2', 'My Unicorn2', 'myUnicorn2'],
+      false,
+      false,
+    )
+  })
+
   it('should use dry run mode when replacing the project name from package.json', async () => {
     const args = { ...baseArgs, dryRun: true }
 

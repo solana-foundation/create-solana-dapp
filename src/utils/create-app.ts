@@ -18,10 +18,10 @@ export async function createApp(args: CreateAppArgs): Promise<CreateAppResult> {
     createAppTaskInstallDependencies(args),
     // Run the (optional) setup script defined in package.json (e.g. build anchor program)
     createAppTaskRunSetup(args),
+    // Install skills for AI coding agents
+    createAppTaskInstallDevSkill(args),
     // Run the (optional) init script defined in package.json
     createAppTaskRunInitScript(args),
-    // Install the Solana dev skill for AI coding agents
-    createAppTaskInstallDevSkill(args),
     // Initialize git repository
     createAppTaskInitializeGit(args),
   ])
