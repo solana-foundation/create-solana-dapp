@@ -62,6 +62,9 @@ in the project.
       // Adding a '+' will make the line bold and '{pm}' is replaced with the package manager
       "+{pm} run anchor build | test | localnet | deploy",
     ],
+    // Optional. Force this template to use an installed package manager.
+    // An explicitly selected different package manager will stop installation.
+    "packageManager": "bun",
     // Rename is a map of terms to rename
     "rename": {
       // Rename every instance of counter

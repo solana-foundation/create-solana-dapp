@@ -79,6 +79,7 @@ Examples:
     process.exit(0)
   }
   let packageManager = result.packageManager ?? pm
+  const packageManagerExplicit = Boolean(result.packageManager || result.pnpm || result.yarn || result.bun)
 
   // The 'yarn', 'pnpm' and 'bun' options are mutually exclusive and will override the 'packageManager' option
   const managers = [result.pnpm && 'pnpm', result.yarn && 'yarn', result.bun && 'bun'].filter(Boolean)
@@ -124,6 +125,7 @@ Examples:
     dryRun: result.dryRun ?? false,
     name: name ?? '',
     packageManager,
+    packageManagerExplicit,
     skipGit: result.skipGit ?? false,
     skipInit: result.skipInit ?? false,
     skipInstall: result.skipInstall ?? false,
