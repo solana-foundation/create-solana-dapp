@@ -6,6 +6,32 @@ import { getAppInfo } from './utils/get-app-info'
 import { getArgs } from './utils/get-args'
 import { detectInvokedPackageManager } from './utils/vendor/package-manager'
 
+export { createApp } from './utils/create-app'
+export type { CreateAppArgs, CreateAppResult } from './utils/create-app'
+export { fetchTemplateData } from './utils/fetch-template-data'
+export type { FetchTemplateDataArgs, FetchTemplateDataResult } from './utils/fetch-template-data'
+export { finalNote } from './utils/final-note'
+export type { FinalNoteArgs } from './utils/final-note'
+export { getAppInfo } from './utils/get-app-info'
+export type { AppInfo } from './utils/get-app-info'
+export { getArgs } from './utils/get-args'
+export type { GetArgsResult } from './utils/get-args-result'
+export { listTemplateIds } from './utils/list-template-ids'
+export { listTemplates } from './utils/list-templates'
+export { listVersions } from './utils/list-versions'
+export type { Template } from './utils/template'
+export type {
+  MenuConfig,
+  MenuConfigItem,
+  MenuItem,
+  TemplateJson,
+  TemplateJsonGroup,
+  TemplateJsonTemplate,
+} from './utils/template-schema'
+export { validateProjectName } from './utils/validate-project-name'
+export { detectInvokedPackageManager } from './utils/vendor/package-manager'
+export type { PackageManager } from './utils/vendor/package-manager'
+
 export async function main(argv: string[]) {
   // Get the invoked package manager
   const pm = detectInvokedPackageManager()

@@ -28,6 +28,12 @@ function toCompactName(name: string): string {
   return getNameSegments(name).join('').toLowerCase()
 }
 
+function toDisplayName(name: string): string {
+  return getNameSegments(name)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .join(' ')
+}
+
 function toKebabName(name: string): string {
   return getNameSegments(name).join('-').toLowerCase()
 }
@@ -66,6 +72,21 @@ function packageNameReplacementValues(from: string, to: string): { fromNames: st
   }
 }
 
+function initScriptRenameReplacementValues(from: string, to: string): { fromNames: string[]; toNames: string[] } {
+  const fromNames = namesValues(from)
+  let toNames = namesValues(to)
+
+  if (/\s/.test(from)) {
+    const displayName = toDisplayName(to)
+    const displayIndex = fromNames.indexOf(from)
+    if (displayIndex !== -1) {
+      toNames = toNames.map((toName, index) => (index === displayIndex ? displayName : toName))
+    }
+  }
+
+  return { fromNames, toNames }
+}
+
 export async function initScriptRename(args: GetArgsResult, rename?: InitScriptRename, verbose = false) {
   const tag = `initScriptRename`
   const { contents } = getPackageJson(args.targetDirectory)
@@ -100,8 +121,7 @@ export async function initScriptRename(args: GetArgsResult, rename?: InitScriptR
     const to = rename[from].to.replace('{{name}}', args.name)
 
     // Get the name matrix for the 'from' and the 'to' value
-    const fromNames = namesValues(from)
-    const toNames = namesValues(to)
+    const { fromNames, toNames } = initScriptRenameReplacementValues(from, to)
 
     for (const path of rename[from].paths) {
       const targetPath = join(args.targetDirectory, path)
