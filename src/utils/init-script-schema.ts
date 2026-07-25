@@ -1,9 +1,14 @@
 import { z } from 'zod/v3'
+import { packageManagers } from './vendor/package-manager'
 
 // This is the key used in package.json to store the init script
 export const initScriptKey = 'create-solana-dapp'
 
 export const InitScriptSchemaInstructions = z.array(z.string())
+
+export const InitScriptSchemaPackageManager = z.enum(packageManagers)
+
+export const InitScriptSchemaSkills = z.array(z.string())
 
 export const InitScriptSchemaVersions = z.object({
   adb: z.string().optional(),
@@ -11,30 +16,24 @@ export const InitScriptSchemaVersions = z.object({
   solana: z.string().optional(),
 })
 
-const InitScriptSchemaRenameEntryBase = z.object({
-  // Accept alias `in` for backward/forward compatibility and normalize to `paths`
-  in: z.array(z.string()).optional(),
-  paths: z.array(z.string()).optional(),
-  to: z.string(),
-})
-
-export const InitScriptSchemaRename = z.record(InitScriptSchemaRenameEntryBase).transform((input) => {
-  // Normalize entries: if `in` is provided, move to `paths`
-  const normalized: Record<string, { paths: string[]; to: string }> = {}
-  for (const key of Object.keys(input)) {
-    const entry = input[key] as { in?: string[]; paths?: string[]; to: string }
-    const paths = entry.paths ?? entry.in ?? []
-    normalized[key] = { paths, to: entry.to }
-  }
-  return normalized
-})
+export const InitScriptSchemaRename = z.record(
+  z.object({
+    // TODO: Rename 'paths' to 'in' (breaking change)
+    paths: z.array(z.string()),
+    to: z.string(),
+  }),
+)
 
 export const InitScriptSchema = z.object({
   instructions: InitScriptSchemaInstructions.optional(),
+  packageManager: InitScriptSchemaPackageManager.optional(),
   rename: InitScriptSchemaRename.optional(),
+  skills: InitScriptSchemaSkills.optional(),
   versions: InitScriptSchemaVersions.optional(),
 })
 
 export type InitScriptInstructions = z.infer<typeof InitScriptSchemaInstructions>
+export type InitScriptPackageManager = z.infer<typeof InitScriptSchemaPackageManager>
 export type InitScriptRename = z.infer<typeof InitScriptSchemaRename>
+export type InitScriptSkills = z.infer<typeof InitScriptSchemaSkills>
 export type InitScriptVersions = z.infer<typeof InitScriptSchemaVersions>

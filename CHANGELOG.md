@@ -1,5 +1,13 @@
 # create-solana-dapp
 
+## 4.8.5
+
+### Patch Changes
+
+- [#246](https://github.com/solana-foundation/create-solana-dapp/pull/246)
+  [`87a38c5`](https://github.com/solana-foundation/create-solana-dapp/commit/87a38c50a5f11ab84644a7272a89d747c8f5bddf)
+  Thanks [@beeman](https://github.com/beeman)! - Replace package name variants during template initialization.
+
 ## 4.8.2
 
 ### Patch Changes

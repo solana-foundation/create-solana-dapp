@@ -1,5 +1,5 @@
 import { intro, log, outro } from '@clack/prompts'
-import { program } from 'commander'
+import { Command } from 'commander'
 import * as process from 'node:process'
 import { fetchTemplateData } from './fetch-template-data'
 import { findTemplate } from './find-template'
@@ -19,7 +19,7 @@ const minimalTemplateName = 'nextjs-anchor'
 
 export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager = 'npm'): Promise<GetArgsResult> {
   // Get the result from the command line
-  const input = program
+  const input = new Command()
     .name(app.name)
     .version(app.version, '-V, --version', help('Output the version number'))
     .argument('[name]', 'Name of the project (default: <prompt>)')
@@ -37,7 +37,7 @@ export async function getArgs(argv: string[], app: AppInfo, pm: PackageManager =
     .option('--skip-init', help('Skip running the init script'))
     .option('--skip-install', help('Skip installing dependencies'))
     .option('--skip-version-check', help('Skip checking for CLI updates (not recommended)'))
-    .option('--templates-url', help('Url to templates.json'), getTemplatesUrl())
+    .option('--templates-url <url>', help('Url to templates.json'), getTemplatesUrl())
     .option('-v, --verbose', help('Verbose output (default: false)'))
     .helpOption('-h, --help', help('Display help for command'))
     .addHelpText(
@@ -79,6 +79,7 @@ Examples:
     process.exit(0)
   }
   let packageManager = result.packageManager ?? pm
+  const packageManagerExplicit = Boolean(result.packageManager || result.pnpm || result.yarn || result.bun)
 
   // The 'yarn', 'pnpm' and 'bun' options are mutually exclusive and will override the 'packageManager' option
   const managers = [result.pnpm && 'pnpm', result.yarn && 'yarn', result.bun && 'bun'].filter(Boolean)
@@ -124,6 +125,7 @@ Examples:
     dryRun: result.dryRun ?? false,
     name: name ?? '',
     packageManager,
+    packageManagerExplicit,
     skipGit: result.skipGit ?? false,
     skipInit: result.skipInit ?? false,
     skipInstall: result.skipInstall ?? false,

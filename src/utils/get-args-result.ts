@@ -7,6 +7,7 @@ export interface GetArgsResult {
   dryRun: boolean
   name: string
   packageManager: PackageManager
+  packageManagerExplicit?: boolean
   skipGit: boolean
   skipInit: boolean
   skipInstall: boolean

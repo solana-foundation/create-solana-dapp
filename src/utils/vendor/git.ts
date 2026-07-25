@@ -54,7 +54,7 @@ export async function initializeGitRepo(directory: string, verbose = false) {
         GIT_COMMITTER_EMAIL: email,
         GIT_COMMITTER_NAME: name,
       },
-      shell: true,
+      shell: false,
       stdio: [process.stdin, outputStream, errorStream],
     }
     return new Promise<void>((resolve, reject) => {
@@ -90,5 +90,5 @@ export async function initializeGitRepo(directory: string, verbose = false) {
   }
   await execute(['add', '.'])
   const message = 'chore: initial commit'
-  await execute(['commit', `-m "${message}"`])
+  await execute(['commit', '-m', message])
 }
