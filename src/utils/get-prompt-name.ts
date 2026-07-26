@@ -10,7 +10,7 @@ export function getPromptName({ options }: { options: GetArgsResult }) {
     }
     return text({
       message: 'Enter project name',
-      validate: validateProjectName,
+      validate: (name) => validateProjectName(name ?? ''),
     })
   }
 }

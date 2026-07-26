@@ -19,14 +19,7 @@ export function getPromptTemplate({ items, options }: { items: MenuItem[]; optio
   }
 }
 
-function getGroupSelectOptions(values: MenuItem[]): SelectOptions<
-  {
-    hint?: string | undefined
-    label: string
-    value: MenuItem
-  }[],
-  MenuItem
-> {
+function getGroupSelectOptions(values: MenuItem[]): SelectOptions<MenuItem> {
   return {
     message: 'Select a group',
     options: values.map((value) => ({
@@ -41,9 +34,7 @@ function selectGroup(values: MenuItem[]): Promise<MenuItem> {
   return select(getGroupSelectOptions(values)) as Promise<MenuItem>
 }
 
-function getTemplateSelectOptions(
-  values: Template[],
-): SelectOptions<{ hint?: string | undefined; label: string; value: Template }[], Template> {
+function getTemplateSelectOptions(values: Template[]): SelectOptions<Template> {
   return {
     message: 'Select a template',
     options: values.map((value) => ({

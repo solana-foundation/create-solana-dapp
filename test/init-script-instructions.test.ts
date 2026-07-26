@@ -10,6 +10,7 @@ vi.mock('@clack/prompts', () => ({
 }))
 describe('initScriptInstructions', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
