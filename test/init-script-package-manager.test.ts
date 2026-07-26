@@ -1,3 +1,4 @@
+import { log } from '@clack/prompts'
 import { fs, vol } from 'memfs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GetArgsResult } from '../src/utils/get-args-result'
@@ -80,15 +81,36 @@ describe('initScriptPackageManager', () => {
     expect(getPackageManagerVersion).not.toHaveBeenCalled()
   })
 
-  it('should reject a template package manager that is not installed', () => {
+  it('should treat an omitted selection flag as explicit for programmatic callers', () => {
+    writePackageJson('bun')
+    const args: GetArgsResult = { ...baseArgs }
+    delete args.packageManagerExplicit
+
+    expect(() => initScriptPackageManager(args)).toThrow('Template requires bun, but npm was explicitly selected')
+    expect(args.packageManager).toBe('npm')
+    expect(getPackageManagerVersion).not.toHaveBeenCalled()
+  })
+
+  it('should reject a template package manager that is not available', () => {
     writePackageJson('bun')
     vi.mocked(getPackageManagerVersion).mockImplementation(() => {
       throw new Error('command not found')
     })
     const args = { ...baseArgs }
 
-    expect(() => initScriptPackageManager(args)).toThrow('Template requires bun, but bun is not installed')
+    expect(() => initScriptPackageManager(args)).toThrow('Template requires bun, but bun is not available')
     expect(args.packageManager).toBe('npm')
+  })
+
+  it('should log the package manager error in verbose mode', () => {
+    writePackageJson('bun')
+    vi.mocked(getPackageManagerVersion).mockImplementation(() => {
+      throw new Error('spawnSync /bin/sh ENOENT')
+    })
+    const args = { ...baseArgs, verbose: true }
+
+    expect(() => initScriptPackageManager(args)).toThrow('Template requires bun, but bun is not available')
+    expect(log.error).toHaveBeenCalledWith('Error checking bun availability: Error: spawnSync /bin/sh ENOENT')
   })
 
   function writePackageJson(packageManager?: string) {

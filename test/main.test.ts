@@ -54,7 +54,7 @@ describe('main', () => {
   })
 
   it.each([
-    'Template requires bun, but bun is not installed',
+    'Template requires bun, but bun is not available',
     'Template requires bun, but npm was explicitly selected',
   ])('should exit with a non-zero code when %s', async (message) => {
     vi.mocked(createApp).mockRejectedValue(new Error(message))

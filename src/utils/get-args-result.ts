@@ -7,6 +7,7 @@ export interface GetArgsResult {
   dryRun: boolean
   name: string
   packageManager: PackageManager
+  /** Treated as true when omitted by programmatic callers. */
   packageManagerExplicit?: boolean
   skipGit: boolean
   skipInit: boolean

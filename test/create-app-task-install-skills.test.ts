@@ -1,7 +1,7 @@
 import { log } from '@clack/prompts'
 import { fs, vol } from 'memfs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createAppTaskInstallDevSkill } from '../src/utils/create-app-task-install-dev-skill'
+import { createAppTaskInstallSkills } from '../src/utils/create-app-task-install-skills'
 import { GetArgsResult } from '../src/utils/get-args-result'
 import { initScriptKey } from '../src/utils/init-script-schema'
 import { execAndWait } from '../src/utils/vendor/child-process-utils'
@@ -17,7 +17,7 @@ vi.mock('@clack/prompts', () => ({
   },
 }))
 
-describe('createAppTaskInstallDevSkill', () => {
+describe('createAppTaskInstallSkills', () => {
   const targetDirectory = '/template'
   const packageJsonPath = `${targetDirectory}/package.json`
 
@@ -126,13 +126,13 @@ describe('createAppTaskInstallDevSkill', () => {
   })
 
   it('should disable the task when install is skipped', () => {
-    const task = createAppTaskInstallDevSkill({ ...baseArgs, skipInstall: true })
+    const task = createAppTaskInstallSkills({ ...baseArgs, skipInstall: true })
 
     expect(task.enabled).toBe(false)
   })
 
   async function runTask(args = baseArgs) {
-    return createAppTaskInstallDevSkill(args).task((value) => value)
+    return createAppTaskInstallSkills(args).task((value) => value)
   }
 
   function writePackageJson(init?: unknown) {
