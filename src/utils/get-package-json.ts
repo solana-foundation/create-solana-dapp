@@ -27,6 +27,7 @@ const PackageJsonSchema = z
   .object({
     [initScriptKey]: InitScriptSchema.optional(),
     name: z.string().optional(),
+    packageManager: z.string().optional(),
     scripts: z.record(z.string()).optional(),
   })
   .passthrough()
