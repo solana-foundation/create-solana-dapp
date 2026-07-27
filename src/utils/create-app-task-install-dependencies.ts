@@ -1,5 +1,6 @@
 import { log } from '@clack/prompts'
 import { existsSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { GetArgsResult } from './get-args-result'
 import { execAndWait } from './vendor/child-process-utils'
@@ -25,7 +26,7 @@ export function createAppTaskInstallDependencies(args: GetArgsResult): Task {
         if (args.verbose) {
           log.warn(`Deleting ${lockFile}`)
         }
-        await execAndWait(`rm ${lockFile}`, args.targetDirectory)
+        await rm(join(args.targetDirectory, lockFile), { force: true })
       }
       if (args.verbose) {
         log.warn(`Running ${install}`)
