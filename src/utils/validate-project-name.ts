@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 
-export function validateProjectName(name: string): string | void {
+export function validateProjectName(name: string): string | undefined {
   // Name must be a valid directory name
   if (!/^[\w-]+$/i.test(name)) {
     return 'Please enter a valid directory name (alphanumeric characters and dashes only)'
