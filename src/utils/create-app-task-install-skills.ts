@@ -7,7 +7,7 @@ import { Task } from './vendor/clack-tasks'
 
 const defaultSkills = ['https://github.com/solana-foundation/solana-dev-skill']
 
-export function createAppTaskInstallDevSkill(args: GetArgsResult): Task {
+export function createAppTaskInstallSkills(args: GetArgsResult): Task {
   return {
     enabled: !args.skipInstall,
     task: async (result) => {

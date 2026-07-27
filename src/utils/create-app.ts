@@ -1,7 +1,7 @@
 import { createAppTaskCloneTemplate } from './create-app-task-clone-template'
 import { createAppTaskInitializeGit } from './create-app-task-initialize-git'
 import { createAppTaskInstallDependencies } from './create-app-task-install-dependencies'
-import { createAppTaskInstallDevSkill } from './create-app-task-install-dev-skill'
+import { createAppTaskInstallSkills } from './create-app-task-install-skills'
 import { createAppTaskRunInitScript } from './create-app-task-run-init-script'
 import { createAppTaskRunSetup } from './create-app-task-run-setup'
 import { type GetArgsResult } from './get-args-result'
@@ -27,7 +27,7 @@ export async function createApp(args: CreateAppArgs): Promise<CreateAppResult> {
       // Run the (optional) setup script defined in package.json (e.g. build anchor program)
       createAppTaskRunSetup(args),
       // Install skills for AI coding agents
-      createAppTaskInstallDevSkill(args),
+      createAppTaskInstallSkills(args),
       // Run the (optional) init script defined in package.json
       createAppTaskRunInitScript(args),
       // Initialize git repository

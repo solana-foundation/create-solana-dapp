@@ -1,3 +1,4 @@
+import { log } from '@clack/prompts'
 import { GetArgsResult } from './get-args-result'
 import { getPackageJson } from './get-package-json'
 import { initScriptKey } from './init-script-schema'
@@ -19,8 +20,11 @@ export function initScriptPackageManager(args: GetArgsResult): void {
 
   try {
     getPackageManagerVersion(packageManager, args.targetDirectory)
-  } catch {
-    taskFail(`Template requires ${packageManager}, but ${packageManager} is not installed`)
+  } catch (error) {
+    if (args.verbose) {
+      log.error(`Error checking ${packageManager} availability: ${error}`)
+    }
+    taskFail(`Template requires ${packageManager}, but ${packageManager} is not available`)
     return
   }
 
