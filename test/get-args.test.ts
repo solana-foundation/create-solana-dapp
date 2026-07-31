@@ -118,4 +118,15 @@ describe('getArgs', () => {
     expect(outro).not.toHaveBeenCalled()
     expect(runVersionCheck).not.toHaveBeenCalled()
   })
+
+  it('collects template-defined boolean flags without registering them globally', async () => {
+    const args = await getArgs(
+      ['node', 'create-solana-dapp', 'my-app', '--template', 'basic', '--llamacpp', '--skip-version-check'],
+      app,
+    )
+
+    expect(args.name).toBe('my-app')
+    expect(args.templateOptions).toEqual(['llamacpp'])
+    expect(args.template).toBe(template)
+  })
 })

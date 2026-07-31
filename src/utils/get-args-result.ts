@@ -14,5 +14,7 @@ export interface GetArgsResult {
   skipInstall: boolean
   targetDirectory: string
   template: Template
+  /** Boolean template-defined flags selected on the command line. */
+  templateOptions?: string[]
   verbose: boolean
 }

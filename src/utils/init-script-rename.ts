@@ -73,33 +73,39 @@ function packageNameReplacementValues(from: string, to: string): { fromNames: st
 }
 
 function initScriptRenameReplacementValues(from: string, to: string): { fromNames: string[]; toNames: string[] } {
+  const replacements = new Map<string, string>()
   const fromNames = namesValues(from)
-  let toNames = namesValues(to)
+  const toNames = namesValues(to)
 
-  if (/\s/.test(from)) {
-    const displayName = toDisplayName(to)
-    const displayIndex = fromNames.indexOf(from)
-    if (displayIndex !== -1) {
-      toNames = toNames.map((toName, index) => (index === displayIndex ? displayName : toName))
+  for (const [index, fromName] of fromNames.entries()) {
+    let toName = toNames[index]
+    if (fromName === from) {
+      toName = /\s/.test(from) ? toDisplayName(to) : to
+    }
+    if (!replacements.has(fromName)) {
+      replacements.set(fromName, toName)
     }
   }
 
-  return { fromNames, toNames }
+  return {
+    fromNames: [...replacements.keys()],
+    toNames: [...replacements.values()],
+  }
 }
 
-export async function initScriptRename(args: GetArgsResult, rename?: InitScriptRename, verbose = false) {
-  const tag = `initScriptRename`
+async function renameProject(args: GetArgsResult, verbose: boolean) {
   const { contents } = getPackageJson(args.targetDirectory)
-  // Rename template from package.json to project name throughout the whole project
   if (contents.name) {
     if (args.verbose) {
-      log.warn(`${tag}: renaming template name '${contents.name}' to project name '${args.name}'`)
+      log.warn(`initScriptRename: renaming template name '${contents.name}' to project name '${args.name}'`)
     }
     const { fromNames, toNames } = packageNameReplacementValues(contents.name, args.name)
     await searchAndReplace(args.targetDirectory, fromNames, toNames, args.dryRun, verbose)
   }
+}
 
-  // Return early if there are no renames defined in the init script
+export async function initScriptRenameEntries(args: GetArgsResult, rename?: InitScriptRename) {
+  const tag = `initScriptRename`
   if (!rename) {
     if (args.verbose) {
       log.warn(`${tag}: no renames found`)
@@ -107,20 +113,8 @@ export async function initScriptRename(args: GetArgsResult, rename?: InitScriptR
     return
   }
 
-  // Loop through each word in the rename object
   for (const from of Object.keys(rename)) {
-    // Skip if the 'from' value matches the package.json name (already replaced above)
-    if (from === contents.name) {
-      if (args.verbose) {
-        log.warn(`${tag}: skipping rename for '${from}' as it matches package.json name (already replaced)`)
-      }
-      continue
-    }
-
-    // Get the 'to' property from the rename object
     const to = rename[from].to.replace('{{name}}', args.name)
-
-    // Get the name matrix for the 'from' and the 'to' value
     const { fromNames, toNames } = initScriptRenameReplacementValues(from, to)
 
     for (const path of rename[from].paths) {
@@ -139,4 +133,20 @@ export async function initScriptRename(args: GetArgsResult, rename?: InitScriptR
   if (args.verbose) {
     log.warn(`${tag}: done`)
   }
+}
+
+export async function initScriptRename(args: GetArgsResult, rename?: InitScriptRename, verbose = false) {
+  const { contents } = getPackageJson(args.targetDirectory)
+  await renameProject(args, verbose)
+
+  if (contents.name && rename?.[contents.name]) {
+    const { [contents.name]: _packageName, ...remainingRename } = rename
+    if (args.verbose) {
+      log.warn(`initScriptRename: skipping rename for '${contents.name}' as it matches package.json name`)
+    }
+    await initScriptRenameEntries(args, remainingRename)
+    return
+  }
+
+  await initScriptRenameEntries(args, rename)
 }

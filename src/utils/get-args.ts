@@ -1,6 +1,7 @@
 import { intro, log, outro } from '@clack/prompts'
 import { Command } from 'commander'
 import * as process from 'node:process'
+import { extractTemplateOptionFlags } from './extract-template-option-flags'
 import { fetchTemplateData } from './fetch-template-data'
 import { findTemplate } from './find-template'
 import { AppInfo } from './get-app-info'
@@ -49,7 +50,9 @@ Examples:
   $ ${app.name} my-app --pnpm # or --yarn
       `,
     )
-    .parse(argv)
+
+  const { argv: knownArgv, templateOptions } = extractTemplateOptionFlags(input, argv)
+  input.parse(knownArgv)
 
   // Get the optional name argument (positional)
   const name = input.args[0]
@@ -131,6 +134,7 @@ Examples:
     skipInstall: result.skipInstall ?? false,
     targetDirectory: `${cwd}/${name}`,
     template,
+    templateOptions,
     verbose,
   }
 

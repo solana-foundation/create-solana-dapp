@@ -1,4 +1,4 @@
-import { readdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { lstat, readdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const EXCLUDED_DIRECTORIES = new Set(['dist', 'coverage', 'node_modules', '.git', 'tmp'])
@@ -124,6 +124,15 @@ export async function searchAndReplace(
   }
 
   try {
+    const rootStats = await lstat(rootFolder)
+    if (rootStats.isFile()) {
+      await processFile(rootFolder)
+      if (isVerbose) {
+        console.log(isDryRun ? 'Dry run completed' : 'Search and replace completed')
+      }
+      return
+    }
+
     await processDirectory(rootFolder)
     await renamePaths(rootFolder)
     if (isVerbose) {
