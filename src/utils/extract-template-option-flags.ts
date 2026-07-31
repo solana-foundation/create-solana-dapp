@@ -3,8 +3,8 @@ import { Command } from 'commander'
 const templateOptionPattern = /^--([a-z][a-z0-9-]*)$/
 
 export interface ExtractTemplateOptionFlagsResult {
-  argv: string[]
-  templateOptions: string[]
+  readonly argv: string[]
+  readonly templateOptions: string[]
 }
 
 /**
@@ -14,38 +14,61 @@ export interface ExtractTemplateOptionFlagsResult {
  * its package metadata is available.
  */
 export function extractTemplateOptionFlags(command: Command, argv: string[]): ExtractTemplateOptionFlagsResult {
-  const unknown = command.parseOptions(argv.slice(2)).unknown
-  if (unknown.length === 0) {
-    return { argv, templateOptions: [] }
-  }
+  const knownArgv = argv.slice(0, 2)
+  const templateOptions = new Set<string>()
+  let preserveNextArgument = false
+  let positionalOnly = false
 
-  const templateOptions = unknown.map((arg) => {
+  for (const arg of argv.slice(2)) {
+    if (positionalOnly || preserveNextArgument) {
+      knownArgv.push(arg)
+      preserveNextArgument = false
+      continue
+    }
+
+    if (arg === '--') {
+      positionalOnly = true
+      knownArgv.push(arg)
+      continue
+    }
+
+    const knownOption = findKnownOption(command, arg)
+    if (knownOption) {
+      knownArgv.push(arg)
+      preserveNextArgument = knownOption.required && !hasInlineValue(knownOption.long, knownOption.short, arg)
+      continue
+    }
+
+    if (!arg.startsWith('-')) {
+      knownArgv.push(arg)
+      continue
+    }
+
     const match = templateOptionPattern.exec(arg)
     if (!match) {
       throw new Error(`Template options must be boolean long flags such as --ollama; received "${arg}".`)
     }
-    return match[1]
-  })
-
-  const remainingUnknown = new Map<string, number>()
-  for (const arg of unknown) {
-    remainingUnknown.set(arg, (remainingUnknown.get(arg) ?? 0) + 1)
+    templateOptions.add(match[1])
   }
-
-  const knownArgv = argv.filter((arg, index) => {
-    if (index < 2) {
-      return true
-    }
-    const count = remainingUnknown.get(arg) ?? 0
-    if (count === 0) {
-      return true
-    }
-    remainingUnknown.set(arg, count - 1)
-    return false
-  })
 
   return {
     argv: knownArgv,
-    templateOptions: [...new Set(templateOptions)],
+    templateOptions: [...templateOptions],
   }
+}
+
+function findKnownOption(command: Command, arg: string) {
+  const longFlag = arg.startsWith('--') ? arg.split('=', 1)[0] : undefined
+  const shortFlag = arg.startsWith('-') && !arg.startsWith('--') ? arg.slice(0, 2) : undefined
+  return command.options.find(
+    (option) =>
+      (longFlag !== undefined && option.long === longFlag) || (shortFlag !== undefined && option.short === shortFlag),
+  )
+}
+
+function hasInlineValue(longFlag: string | undefined, shortFlag: string | undefined, arg: string): boolean {
+  if (longFlag !== undefined && arg.startsWith('--')) {
+    return arg.startsWith(`${longFlag}=`)
+  }
+  return shortFlag !== undefined && arg.startsWith(shortFlag) && arg !== shortFlag
 }

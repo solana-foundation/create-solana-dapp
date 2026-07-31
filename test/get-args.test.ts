@@ -129,4 +129,27 @@ describe('getArgs', () => {
     expect(args.templateOptions).toEqual(['llamacpp'])
     expect(args.template).toBe(template)
   })
+
+  it('parses positional and registered arguments after a template-defined flag', async () => {
+    const args = await getArgs(
+      [
+        'node',
+        'create-solana-dapp',
+        '--llamacpp',
+        'my-app',
+        '--skip-install',
+        '--template',
+        'basic',
+        '--skip-version-check',
+      ],
+      app,
+    )
+
+    expect(args).toMatchObject({
+      name: 'my-app',
+      skipInstall: true,
+      template,
+      templateOptions: ['llamacpp'],
+    })
+  })
 })
