@@ -111,6 +111,32 @@ describe('initScriptRename', () => {
     )
   })
 
+  it('should preserve punctuation in exact replacement values', async () => {
+    const args = { ...baseArgs }
+    const rename = {
+      'inference-model': {
+        paths: ['request.json'],
+        to: 'qwen3:0.6b',
+      },
+    }
+    vi.mocked(namesValues).mockImplementation((name) =>
+      name === 'inference-model'
+        ? ['InferenceModel', 'INFERENCE_MODEL', 'inference-model', 'inference-model', 'inferenceModel']
+        : ['Qwen306b', 'QWEN306B', 'qwen306b', 'qwen3:0.6b', 'qwen306b'],
+    )
+    vi.mocked(ensureTargetPath).mockResolvedValue(true)
+
+    await initScriptRename(args, rename)
+
+    expect(searchAndReplace).toHaveBeenLastCalledWith(
+      '/template/request.json',
+      ['InferenceModel', 'INFERENCE_MODEL', 'inference-model', 'inferenceModel'],
+      ['Qwen306b', 'QWEN306B', 'qwen3:0.6b', 'qwen306b'],
+      false,
+      false,
+    )
+  })
+
   it('should use dry run mode when replacing the project name from package.json', async () => {
     const args = { ...baseArgs, dryRun: true }
 

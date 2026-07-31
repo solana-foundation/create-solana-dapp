@@ -55,6 +55,14 @@ describe('searchAndReplace', () => {
     await expect(access(join(tempDir, 'oldname.txt'))).rejects.toThrow()
   })
 
+  it('should replace content when the target is an individual file', async () => {
+    const filePath = join(tempDir, 'file1.txt')
+
+    await searchAndReplace(filePath, ['Hello'], ['Hi'])
+
+    expect(await readFile(filePath, 'utf8')).toBe('Hi world')
+  })
+
   it('should treat search values as literal strings', async () => {
     await writeFile(join(tempDir, 'foo.bar.txt'), 'foo.bar fooXbar')
     await writeFile(join(tempDir, 'fooXbar.txt'), 'fooXbar')

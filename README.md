@@ -78,6 +78,34 @@ in the project.
     // Optional. If omitted, the default Solana skill is installed.
     // Set to [] to skip skill installation, or provide one or more skill repo URLs to replace the default.
     "skills": ["https://github.com/org/skill-repo"],
+    // Optional boolean CLI flags declared by this template.
+    "options": {
+      // `--ollama` is selected when no option in the "engine" group is passed.
+      "ollama": {
+        "default": true,
+        "description": "Configure the template for Ollama",
+        "group": "engine",
+        "instructions": ["Start Ollama"],
+        "rename": {
+          "__MODEL__": {
+            "to": "qwen3:0.6b",
+            "paths": ["request.json"],
+          },
+        },
+      },
+      // Passing `--llamacpp` replaces the default from the same group.
+      "llamacpp": {
+        "description": "Configure the template for llama.cpp",
+        "group": "engine",
+        "instructions": ["Start llama-server"],
+        "rename": {
+          "__MODEL__": {
+            "to": "local-model",
+            "paths": ["request.json"],
+          },
+        },
+      },
+    },
     // Check versions and give a warning if it's not installed or the version is lower
     "versions": {
       "adb": "33.0.0",
@@ -87,6 +115,17 @@ in the project.
   },
 }
 ```
+
+Pass template-defined options as boolean long flags when creating the project:
+
+```shell
+pnpm create solana-dapp@latest my-inference-app \
+  --template pay-gate-inference \
+  --ollama
+```
+
+When no flag is passed for an option group, the group's default option is selected. Passing another option from that
+group, such as `--llamacpp`, replaces the default.
 
 ## Contributing
 
