@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { z } from 'zod/v3'
+import { z } from 'zod'
 import { getPackageJsonPath } from './get-package-json-path'
 import { initScriptKey, InitScriptSchema } from './init-script-schema'
 
@@ -23,13 +23,11 @@ export function getPackageJson(targetDirectory: string): { contents: PackageJson
   return { contents: parsed.data, path }
 }
 
-const PackageJsonSchema = z
-  .object({
-    [initScriptKey]: InitScriptSchema.optional(),
-    name: z.string().optional(),
-    packageManager: z.string().optional(),
-    scripts: z.record(z.string()).optional(),
-  })
-  .passthrough()
+const PackageJsonSchema = z.looseObject({
+  [initScriptKey]: InitScriptSchema.optional(),
+  name: z.string().optional(),
+  packageManager: z.string().optional(),
+  scripts: z.record(z.string(), z.string()).optional(),
+})
 
 export type PackageJson = z.infer<typeof PackageJsonSchema>
