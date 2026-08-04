@@ -1,4 +1,4 @@
-import { z } from 'zod/v3'
+import { z } from 'zod'
 import { packageManagers } from './vendor/package-manager'
 
 // This is the key used in package.json to store the init script
@@ -17,6 +17,7 @@ export const InitScriptSchemaVersions = z.object({
 })
 
 export const InitScriptSchemaRename = z.record(
+  z.string(),
   z.object({
     // TODO: Rename 'paths' to 'in' (breaking change)
     paths: z.array(z.string()),

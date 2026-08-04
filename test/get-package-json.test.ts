@@ -36,13 +36,12 @@ describe('getPackageJson', () => {
 
     expect(() => getPackageJson(targetDirectory)).toThrow(`Invalid package.json: [
   {
+    "expected": "record",
     "code": "invalid_type",
-    "expected": "object",
-    "received": "string",
     "path": [
       "scripts"
     ],
-    "message": "Expected object, received string"
+    "message": "Invalid input: expected record, received string"
   }
 ]`)
   })
