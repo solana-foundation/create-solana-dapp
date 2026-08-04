@@ -5,11 +5,12 @@ import sort from 'eslint-plugin-sort'
 export default unjs(
   {
     ignores: [
-      // ignore paths
-      'coverage',
-      'dist',
-      'node_modules',
-      'tmp',
+      // ignore paths (the `**/` prefix is required to match at any depth, not just the repo root)
+      '**/.claude',
+      '**/coverage',
+      '**/dist',
+      '**/node_modules',
+      '**/tmp',
     ],
     markdown: {
       rules: {
