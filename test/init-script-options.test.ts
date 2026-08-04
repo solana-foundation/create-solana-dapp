@@ -64,7 +64,7 @@ describe('initScriptOptions', () => {
   })
 
   it('applies selected renames and returns selected instructions', async () => {
-    const instructions = await initScriptOptions({ ...args, templateOptions: ['llamacpp'] }, options)
+    const instructions = await initScriptOptions(args, resolveInitScriptOptions(options, ['llamacpp']))
 
     expect(initScriptRenameEntries).toHaveBeenCalledWith(expect.any(Object), options.llamacpp.rename)
     expect(instructions).toEqual(['Start llama.cpp'])

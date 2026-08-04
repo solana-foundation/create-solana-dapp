@@ -106,6 +106,14 @@ in the project.
           },
         },
       },
+      // Passing `--reset-project` runs the template's own `reset-project` script.
+      "reset-project": {
+        "description": "Start from a blank app instead of the example code",
+        "group": "example",
+        "instructions": ["Edit app/index.tsx to start building."],
+        // A package.json script, optionally followed by arguments.
+        "run": "reset-project -- --yes",
+      },
     },
     // Check versions and give a warning if it's not installed or the version is lower
     "versions": {
@@ -127,6 +135,16 @@ pnpm create solana-dapp@latest my-inference-app \
 
 When no flag is passed for an option group, the group's default option is selected. Passing another option from that
 group, such as `--llamacpp`, replaces the default.
+
+An option can declare a `run` value naming a script in the template's `package.json`, optionally followed by arguments.
+The script runs with the selected package manager after the template is cloned and **before dependencies are
+installed**, so a script that trims `package.json` is reflected in the lockfile and `node_modules`, and any files it
+writes are still picked up by the rename step. The script must not prompt, since it runs without an interactive
+terminal. A non-zero exit aborts the run and removes the target directory.
+
+The value is limited to letters, digits, whitespace and `. : @ / = , + - _`. Shell metacharacters are rejected rather
+than escaped, which also means an argument cannot contain a space — put anything that needs quoting in the script
+itself.
 
 ## Contributing
 

@@ -11,7 +11,6 @@
  */
 import { exec } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
-import { join } from 'node:path'
 
 export class CreateAppError extends Error {
   constructor(
@@ -29,7 +28,8 @@ export function execAndWait(command: string, cwd: string) {
     exec(command, { cwd, env: { ...process.env } }, (error, stdout, stderr) => {
       if (error) {
         const errorStr = stderr && stderr.trim().length > 0 ? stderr : `${error}`
-        const logFile = join(cwd, 'error.log')
+        // Written next to `cwd` instead of inside it so it survives cleanup of a failed target directory
+        const logFile = `${cwd}.error.log`
         writeFileSync(logFile, `${stdout}\n${errorStr}`)
         const message = errorStr.trim().length > 0 ? errorStr : `An error occurred while running ${command}`
         rej(new CreateAppError(message, error.code, logFile))

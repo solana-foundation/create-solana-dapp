@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp } from '../src/utils/create-app'
 import { createAppTaskInstallDependencies } from '../src/utils/create-app-task-install-dependencies'
 import { GetArgsResult } from '../src/utils/get-args-result'
+import { getPackageJson } from '../src/utils/get-package-json'
+import { resolveInitScriptOptions } from '../src/utils/init-script-options'
 import { initScriptPackageManager } from '../src/utils/init-script-package-manager'
 import { tasks } from '../src/utils/vendor/clack-tasks'
 
@@ -10,6 +12,12 @@ vi.mock('../src/utils/create-app-task-install-dependencies', () => ({
     task: vi.fn(),
     title: `Installing via ${args.packageManager}`,
   })),
+}))
+vi.mock('../src/utils/get-package-json', () => ({
+  getPackageJson: vi.fn(() => ({ contents: {}, path: '/template/package.json' })),
+}))
+vi.mock('../src/utils/init-script-options', () => ({
+  resolveInitScriptOptions: vi.fn(() => []),
 }))
 vi.mock('../src/utils/init-script-package-manager', () => ({
   initScriptPackageManager: vi.fn(),
@@ -36,6 +44,8 @@ describe('createApp', () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(getPackageJson).mockReturnValue({ contents: {}, path: '/template/package.json' })
+    vi.mocked(resolveInitScriptOptions).mockReturnValue([])
   })
 
   it('should resolve the template package manager after cloning and before creating install tasks', async () => {

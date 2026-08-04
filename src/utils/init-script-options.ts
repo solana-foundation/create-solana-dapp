@@ -2,7 +2,7 @@ import { GetArgsResult } from './get-args-result'
 import { initScriptRenameEntries } from './init-script-rename'
 import { InitScriptOptions } from './init-script-schema'
 
-interface SelectedTemplateOption {
+export interface SelectedTemplateOption {
   name: string
   value: InitScriptOptions[string]
 }
@@ -66,11 +66,7 @@ export function resolveInitScriptOptions(
  * Applies the selected template option transformations and returns their
  * post-create instructions.
  */
-export async function initScriptOptions(
-  args: GetArgsResult,
-  options: InitScriptOptions | undefined,
-): Promise<string[]> {
-  const selected = resolveInitScriptOptions(options, args.templateOptions ?? [])
+export async function initScriptOptions(args: GetArgsResult, selected: SelectedTemplateOption[]): Promise<string[]> {
   for (const option of selected) {
     await initScriptRenameEntries(args, option.value.rename)
   }
