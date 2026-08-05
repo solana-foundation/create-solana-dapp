@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         node:
+          - '22.12.0'
           - 'current'
           - 'lts/*'
 

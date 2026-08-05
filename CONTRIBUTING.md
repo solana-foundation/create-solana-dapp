@@ -108,7 +108,7 @@ In another terminal, move to the directory where you want to test the `create-so
 
 ```shell
 cd /tmp
-node ~/path/to/create-solana-dapp/dist/bin/index.cjs --help
+node ~/path/to/create-solana-dapp/dist/bin/index.mjs --help
 ```
 
 ### Committing Your Changes

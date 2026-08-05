@@ -23,7 +23,7 @@
 # $ TAG=next csd
 #
 # Create an app using a local create-solana-dapp command. Run `pnpm build:watch` in the create-solana-dapp directory to watch for changes.
-# $ CMD="node $HOME/path/to/create-solana-dapp/dist/bin/index.cjs --pnpm" csd
+# $ CMD="node $HOME/path/to/create-solana-dapp/dist/bin/index.mjs --pnpm" csd
 #
 # Create an app using npx
 # $ CMD="npx -y create-solana-dapp@latest" csd

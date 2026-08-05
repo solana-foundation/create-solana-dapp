@@ -6,7 +6,7 @@ RUN apk add --no-cache bash git
 RUN echo "export PS1='\w # '" >> ~/.bashrc
 
 RUN corepack enable && corepack use pnpm@latest-10
-RUN echo "export CMD=\"node /workspace/dist/bin/index.cjs --pnpm --verbose\"" >> ~/.bashrc
+RUN echo "export CMD=\"node /workspace/dist/bin/index.mjs --pnpm --verbose\"" >> ~/.bashrc
 
 COPY csd.sh /usr/local/bin/csd
 

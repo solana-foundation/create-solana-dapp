@@ -3,7 +3,7 @@
   "version": "4.8.5",
   "description": "The fastest way to create Solana apps",
   "engines": {
-    "node": ">=20.12.0"
+    "node": ">=22.12.0"
   },
   "repository": {
     "name": "solana-foundation/create-solana-dapp",
@@ -31,7 +31,7 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "bin": {
-    "create-solana-dapp": "./dist/bin/index.cjs"
+    "create-solana-dapp": "./dist/bin/index.mjs"
   },
   "files": [
     "dist"
