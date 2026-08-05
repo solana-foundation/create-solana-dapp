@@ -23,7 +23,7 @@ jobs:
       has_changesets: ${{ steps.check.outputs.has_changesets }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check for changesets
         id: check
@@ -42,7 +42,7 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -59,12 +59,12 @@ jobs:
         run: pnpm exec publint --pack pnpm
 
       - name: Setup npm registry auth
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Create Changesets Pull Request or Publish
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           commit: 'chore: version packages'
           publish: pnpm publish-packages
@@ -85,7 +85,7 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Dependencies
         uses: ./.github/workflows/actions/install-dependencies
@@ -105,7 +105,7 @@ jobs:
         run: pnpm exec publint --pack pnpm
 
       - name: Setup npm registry auth
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           registry-url: 'https://registry.npmjs.org'
 
