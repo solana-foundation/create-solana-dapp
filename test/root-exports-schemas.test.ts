@@ -121,11 +121,11 @@ describe('package root schema exports', () => {
           description: 'Include mobile wallet adapter',
           group: 'mobile',
           instructions: ['pnpm run android'],
-          rename: { 'wallet-name': { paths: ['app'], to: 'my-wallet' } },
+          rename: { 'wallet-name': { in: ['app'], to: 'my-wallet' } },
         },
       },
       packageManager: 'pnpm',
-      rename: { 'anchor-project': { paths: ['anchor'], to: 'my-project' } },
+      rename: { 'anchor-project': { in: ['anchor'], to: 'my-project' } },
       skills: ['solana-dev'],
       versions: { anchor: '0.31.1', solana: '2.1.0' },
     }
@@ -151,7 +151,7 @@ describe('package root schema exports', () => {
     expectTypeOf<InitScriptInstructions>().toEqualTypeOf<string[]>()
     expectTypeOf<InitScriptSkills>().toEqualTypeOf<string[]>()
     expectTypeOf<InitScriptPackageManager>().toEqualTypeOf<'bun' | 'npm' | 'pnpm' | 'yarn'>()
-    expectTypeOf<InitScriptRename>().toEqualTypeOf<Record<string, { paths: string[]; to: string }>>()
+    expectTypeOf<InitScriptRename>().toEqualTypeOf<Record<string, { in?: string[]; paths?: string[]; to: string }>>()
     expectTypeOf<InitScriptOption>().toEqualTypeOf<{
       default?: boolean
       description?: string

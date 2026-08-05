@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { ensureTargetPath } from './ensure-target-path'
 import { GetArgsResult } from './get-args-result'
 import { getPackageJson } from './get-package-json'
-import { InitScriptRename } from './init-script-schema'
+import { InitScriptRename, InitScriptRenameEntry } from './init-script-schema'
 import { searchAndReplace } from './search-and-replace'
 import { namesValues } from './vendor/names'
 
@@ -46,6 +46,11 @@ function toPascalName(name: string): string {
 
 function toSnakeName(name: string): string {
   return getNameSegments(name).join('_').toLowerCase()
+}
+
+function renameEntryPaths(entry: InitScriptRenameEntry): string[] {
+  // `paths` is the deprecated spelling of `in`; the schema guarantees exactly one of them is set
+  return entry.in ?? entry.paths ?? []
 }
 
 function packageNameReplacementValues(from: string, to: string): { fromNames: string[]; toNames: string[] } {
@@ -113,11 +118,18 @@ export async function initScriptRenameEntries(args: GetArgsResult, rename?: Init
     return
   }
 
+  const deprecated = Object.keys(rename).filter((from) => rename[from].paths)
+  if (deprecated.length > 0) {
+    log.warn(
+      `${tag}: 'paths' is deprecated and is removed in the next major version, use 'in' instead: ${deprecated.join(', ')}`,
+    )
+  }
+
   for (const from of Object.keys(rename)) {
     const to = rename[from].to.replace('{{name}}', args.name)
     const { fromNames, toNames } = initScriptRenameReplacementValues(from, to)
 
-    for (const path of rename[from].paths) {
+    for (const path of renameEntryPaths(rename[from])) {
       const targetPath = join(args.targetDirectory, path)
       if (!(await ensureTargetPath(targetPath))) {
         log.error(`${tag}: target does not exist ${targetPath}`)

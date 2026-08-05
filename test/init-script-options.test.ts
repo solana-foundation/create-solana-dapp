@@ -13,7 +13,7 @@ const options: InitScriptOptions = {
     group: 'engine',
     instructions: ['Start llama.cpp'],
     rename: {
-      __MODEL__: { paths: ['request.json'], to: 'local-model' },
+      __MODEL__: { in: ['request.json'], to: 'local-model' },
     },
   },
   ollama: {
@@ -21,7 +21,7 @@ const options: InitScriptOptions = {
     group: 'engine',
     instructions: ['Start Ollama'],
     rename: {
-      __MODEL__: { paths: ['request.json'], to: 'qwen3:0.6b' },
+      __MODEL__: { in: ['request.json'], to: 'qwen3:0.6b' },
     },
   },
 }

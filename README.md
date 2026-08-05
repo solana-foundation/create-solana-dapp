@@ -69,10 +69,11 @@ in the project.
     "rename": {
       // Rename every instance of counter
       "counter": {
+        // In the following paths. Was called 'paths', which is deprecated and
+        // is removed in the next major version.
+        "in": ["anchor", "src"],
         // With the name of the project
         "to": "{{name}}",
-        // In the following paths
-        "paths": ["anchor", "src"],
       },
     },
     // Optional. If omitted, the default Solana skill is installed.
@@ -88,8 +89,8 @@ in the project.
         "instructions": ["Start Ollama"],
         "rename": {
           "__MODEL__": {
+            "in": ["request.json"],
             "to": "qwen3:0.6b",
-            "paths": ["request.json"],
           },
         },
       },
@@ -100,8 +101,8 @@ in the project.
         "instructions": ["Start llama-server"],
         "rename": {
           "__MODEL__": {
+            "in": ["request.json"],
             "to": "local-model",
-            "paths": ["request.json"],
           },
         },
       },

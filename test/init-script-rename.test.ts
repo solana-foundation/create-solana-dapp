@@ -68,7 +68,7 @@ describe('initScriptRename', () => {
     const fromNames = ['ExampleApp', 'EXAMPLE_APP', 'example-app', 'Example App', 'exampleApp']
     const rename = {
       'Example App': {
-        paths: ['app.json'],
+        in: ['app.json'],
         to: '{{name}}',
       },
     }
@@ -93,7 +93,7 @@ describe('initScriptRename', () => {
       await vi.importActual<typeof import('../src/utils/vendor/names')>('../src/utils/vendor/names')
     const rename = {
       'Example App': {
-        paths: ['app.json'],
+        in: ['app.json'],
         to: '{{name}}',
       },
     }
@@ -115,7 +115,7 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs }
     const rename = {
       'inference-model': {
-        paths: ['request.json'],
+        in: ['request.json'],
         to: 'qwen3:0.6b',
       },
     }
@@ -164,7 +164,7 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        paths: ['some/path/to/file'],
+        in: ['some/path/to/file'],
         to: '{{name}}Example',
       },
     }
@@ -184,6 +184,49 @@ describe('initScriptRename', () => {
     )
   })
 
+  it('should still replace using the deprecated `paths` and warn about it', async () => {
+    const args = { ...baseArgs }
+    const rename = {
+      example: {
+        paths: ['some/path/to/file'],
+        to: '{{name}}Example',
+      },
+    }
+    const exampleNames = ['Example']
+    const newNameExamples = ['test-projectExample']
+    vi.mocked(namesValues).mockImplementation((name) => (name === 'example' ? exampleNames : newNameExamples))
+    vi.mocked(ensureTargetPath).mockResolvedValue(true)
+
+    await initScriptRename(args, rename)
+
+    expect(searchAndReplace).toHaveBeenCalledWith(
+      expect.stringContaining('some/path/to/file'),
+      exampleNames,
+      newNameExamples,
+      args.dryRun,
+      args.verbose,
+    )
+    expect(log.warn).toHaveBeenCalledWith(
+      `initScriptRename: 'paths' is deprecated and is removed in the next major version, use 'in' instead: example`,
+    )
+  })
+
+  it('should not warn about `paths` when only `in` is used', async () => {
+    const args = { ...baseArgs }
+    const rename = {
+      example: {
+        in: ['some/path/to/file'],
+        to: '{{name}}Example',
+      },
+    }
+    vi.mocked(namesValues).mockReturnValue(['Example'])
+    vi.mocked(ensureTargetPath).mockResolvedValue(true)
+
+    await initScriptRename(args, rename)
+
+    expect(log.warn).not.toHaveBeenCalled()
+  })
+
   it('should log a message when verbose and no rename object is provided', async () => {
     const args: GetArgsResult = { ...baseArgs, verbose: true }
     await initScriptRename(args, undefined)
@@ -194,7 +237,7 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        paths: ['some/path/to/file'],
+        in: ['some/path/to/file'],
         to: '{{name}}Example',
       },
     }
@@ -216,7 +259,7 @@ describe('initScriptRename', () => {
     const args = { ...baseArgs, verbose: true }
     const rename = {
       example: {
-        paths: ['nonexistent/path/to/file'],
+        in: ['nonexistent/path/to/file'],
         to: '{{name}}Example',
       },
     }
