@@ -7,9 +7,11 @@ import { MenuItem } from './template-schema'
 
 export function getPrompts({ items, options }: { items: MenuItem[]; options: GetArgsResult }) {
   return group(
+    // The key order determines the prompt order: the template is selected first so it can seed the project name
     {
-      name: getPromptName({ options }),
+      // eslint-disable-next-line sort/object-properties
       template: getPromptTemplate({ items, options }),
+      name: getPromptName({ options }),
     },
     {
       onCancel: () => {
