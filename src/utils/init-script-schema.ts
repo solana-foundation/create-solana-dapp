@@ -52,6 +52,14 @@ export const InitScriptSchemaOption = z.object({
   group: z.string().min(1).optional(),
   instructions: InitScriptSchemaInstructions.optional(),
   rename: InitScriptSchemaRename.optional(),
+  // A package.json script to run when this option is selected, optionally followed by arguments.
+  // The value reaches a shell, so shell metacharacters are rejected rather than escaped. This also
+  // rules out quoted arguments, so an argument cannot contain a space; put those in the script itself.
+  run: z
+    .string()
+    .min(1)
+    .regex(/^[\w\s.:@/=,+-]+$/, 'run may only contain letters, digits, whitespace and the characters . : @ / = , + - _')
+    .optional(),
 })
 
 export const InitScriptSchemaOptions = z.record(z.string().regex(/^[a-z][a-z0-9-]*$/), InitScriptSchemaOption)
@@ -65,6 +73,7 @@ export const InitScriptSchema = z.object({
   versions: InitScriptSchemaVersions.optional(),
 })
 
+export type InitScript = z.infer<typeof InitScriptSchema>
 export type InitScriptInstructions = z.infer<typeof InitScriptSchemaInstructions>
 export type InitScriptOption = z.infer<typeof InitScriptSchemaOption>
 export type InitScriptOptions = z.infer<typeof InitScriptSchemaOptions>

