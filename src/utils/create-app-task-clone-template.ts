@@ -2,8 +2,43 @@ import { log } from '@clack/prompts'
 import { downloadTemplate } from 'giget'
 import { cpSync, existsSync, mkdirSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
+import { corruptArchiveMessage, isCorruptArchiveError } from './corrupt-archive-error'
 import { GetArgsResult } from './get-args-result'
 import { Task, taskFail } from './vendor/clack-tasks'
+
+/**
+ * Downloads the template, retrying once when the cached tarball turns out to be
+ * corrupt (#256).
+ *
+ * giget only re-downloads when the previous attempt is not reused: if a partial
+ * tarball is already cached and the download errors, giget silently extracts the
+ * partial file and `tar` fails with a zlib error. A second attempt re-runs the
+ * download, which overwrites the poisoned cache entry when the network
+ * cooperates; if it does not, the user gets an actionable message instead of a
+ * bare `ZlibError`.
+ */
+async function downloadTemplateWithRetry(args: GetArgsResult) {
+  try {
+    return await downloadTemplate(args.template.id, { dir: args.targetDirectory })
+  } catch (error) {
+    if (!isCorruptArchiveError(error)) {
+      throw error
+    }
+    if (args.verbose) {
+      log.warn(`Cached template archive was corrupt, retrying download: ${error}`)
+    }
+    try {
+      // `forceClean` clears the partially extracted target directory the failed
+      // attempt may have left behind.
+      return await downloadTemplate(args.template.id, { dir: args.targetDirectory, forceClean: true })
+    } catch (retryError) {
+      if (isCorruptArchiveError(retryError)) {
+        throw new Error(corruptArchiveMessage(args.template.id))
+      }
+      throw retryError
+    }
+  }
+}
 
 export function createAppTaskCloneTemplate(args: GetArgsResult): Task {
   return {
@@ -45,10 +80,7 @@ export function createAppTaskCloneTemplate(args: GetArgsResult): Task {
 
           dir = args.targetDirectory
         } else {
-          const downloadResult = await downloadTemplate(args.template.id, {
-            dir: args.targetDirectory,
-          })
-          dir = downloadResult.dir
+          dir = (await downloadTemplateWithRetry(args)).dir
         }
 
         // make sure the dir is not empty
