@@ -1,6 +1,6 @@
 {
   "name": "create-solana-dapp",
-  "version": "4.8.5",
+  "version": "4.9.0",
   "description": "The fastest way to create Solana apps",
   "engines": {
     "node": ">=22.12.0"
