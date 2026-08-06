@@ -74,6 +74,15 @@ describe('searchAndReplace', () => {
     await expect(access(join(tempDir, 'foo.bar.txt'))).rejects.toThrow()
   })
 
+  it('should not reprocess replacement text when names overlap', async () => {
+    await writeFile(join(tempDir, 'counter.ts'), 'export const name = "counter"')
+
+    await searchAndReplace(tempDir, ['counter'], ['my-counter'], false, false)
+
+    expect(await readFile(join(tempDir, 'my-counter.ts'), 'utf8')).toBe('export const name = "my-counter"')
+    await expect(access(join(tempDir, 'counter.ts'))).rejects.toThrow()
+  })
+
   it('should exclude directories like node_modules and .git from processing', async () => {
     const consoleLogSpy = vi.spyOn(console, 'log')
 

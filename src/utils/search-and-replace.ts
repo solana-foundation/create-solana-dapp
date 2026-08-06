@@ -7,6 +7,20 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)
 }
 
+function replaceAllLiterals(value: string, fromStrings: string[], toStrings: string[]): string {
+  if (fromStrings.length === 0) {
+    return value
+  }
+
+  const replacementMap = new Map(fromStrings.map((fromString, index) => [fromString, toStrings[index]]))
+  const pattern = [...replacementMap.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map((fromString) => escapeRegExp(fromString))
+    .join('|')
+
+  return value.replace(new RegExp(pattern, 'g'), (match) => replacementMap.get(match) ?? match)
+}
+
 export async function searchAndReplace(
   rootFolder: string,
   fromStrings: string[],
@@ -23,13 +37,10 @@ export async function searchAndReplace(
       const content = await readFile(filePath, 'utf8')
       let newContent = content
 
-      for (const [i, fromString] of fromStrings.entries()) {
-        const regex = new RegExp(escapeRegExp(fromString), 'g')
-        newContent = newContent.replace(regex, () => toStrings[i])
-        // Make sure we maintain the possible newline at the end of the file
-        if (content.endsWith('\n') && !newContent.endsWith('\n')) {
-          newContent += '\n'
-        }
+      newContent = replaceAllLiterals(content, fromStrings, toStrings)
+      // Make sure we maintain the possible newline at the end of the file
+      if (content.endsWith('\n') && !newContent.endsWith('\n')) {
+        newContent += '\n'
       }
 
       if (content !== newContent) {
@@ -99,9 +110,7 @@ export async function searchAndReplace(
         const oldPath = join(directoryPath, entry.name)
         let newName = entry.name
 
-        for (const [i, fromString] of fromStrings.entries()) {
-          newName = newName.replace(new RegExp(escapeRegExp(fromString), 'g'), () => toStrings[i])
-        }
+        newName = replaceAllLiterals(entry.name, fromStrings, toStrings)
 
         const newPath = join(directoryPath, newName)
 
