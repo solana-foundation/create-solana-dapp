@@ -1,5 +1,100 @@
 # create-solana-dapp
 
+## 4.9.0
+
+### Minor Changes
+
+- [#255](https://github.com/solana-foundation/create-solana-dapp/pull/255)
+  [`4684040`](https://github.com/solana-foundation/create-solana-dapp/commit/4684040d1aba239076a16d9a7a22eb5e7f831083)
+  Thanks [@beeman](https://github.com/beeman)! - Expose embeddable create flow and argument parsing APIs from the
+  package root, and parse `--templates-url` values correctly.
+
+- [#275](https://github.com/solana-foundation/create-solana-dapp/pull/275)
+  [`dfec599`](https://github.com/solana-foundation/create-solana-dapp/commit/dfec5995110987e4642367802b361b327f5409df)
+  Thanks [@beeman](https://github.com/beeman)! - Ship the CLI entry point as ESM and raise the Node floor to
+  `>=22.12.0`. The published `bin` previously pointed at a CommonJS bundle that called `require()` on four ESM-only
+  dependencies (`@clack/prompts`, `giget`, `is-in-ci`, `update-notifier`), which only resolved through Node's
+  `require(esm)` support and therefore crashed with `ERR_REQUIRE_ESM` on Node 20.12 through 20.18. The bin is now
+  `dist/bin/index.mjs` and the new floor guarantees `require(esm)` for the CommonJS library entry that is still
+  published for `require('create-solana-dapp')` consumers. Node 20 reached end of life on 2026-04-30.
+
+- [#265](https://github.com/solana-foundation/create-solana-dapp/pull/265)
+  [`d76f5ba`](https://github.com/solana-foundation/create-solana-dapp/commit/d76f5ba95400e088bc5320aadc8503dffc298582)
+  Thanks [@beeman](https://github.com/beeman)! - Export the template catalog and init script Zod schemas from the
+  package root so external tooling can validate and generate templates against a single source of truth.
+
+- [#269](https://github.com/solana-foundation/create-solana-dapp/pull/269)
+  [`4a8b0b9`](https://github.com/solana-foundation/create-solana-dapp/commit/4a8b0b92e16a15670165aa594e5c568e68ae0ae4)
+  Thanks [@beeman](https://github.com/beeman)! - Accept `in` for rename entries in the init script and deprecate
+  `paths`. Templates using `paths` keep working and now log a deprecation warning; support for `paths` is removed in the
+  next major version. An entry must set exactly one of the two.
+
+- [#272](https://github.com/solana-foundation/create-solana-dapp/pull/272)
+  [`54930bf`](https://github.com/solana-foundation/create-solana-dapp/commit/54930bf8dd3443a2c50e25e2cb2d432d74b1b1d2)
+  Thanks [@beeman](https://github.com/beeman)! - Select the template before entering the project name, and pre-fill the
+  name with the template name.
+
+- [#264](https://github.com/solana-foundation/create-solana-dapp/pull/264)
+  [`08981ac`](https://github.com/solana-foundation/create-solana-dapp/commit/08981ac84526a5affb8ad21f798d0ccd7dcec933)
+  Thanks [@lgalabru](https://github.com/lgalabru)! - Support template-defined boolean CLI flags with defaults, mutually
+  exclusive groups, file replacements, and post-create instructions.
+
+- [#266](https://github.com/solana-foundation/create-solana-dapp/pull/266)
+  [`fbafb1a`](https://github.com/solana-foundation/create-solana-dapp/commit/fbafb1a42ab1e5a92911348fe466044b002028bf)
+  Thanks [@beeman](https://github.com/beeman)! - Support a `run` value on template options, naming a `package.json`
+  script to run when the option is selected. The script runs with the selected package manager after the template is
+  cloned and before dependencies are installed, so a script that trims `package.json` is reflected in the lockfile and
+  `node_modules`. The value reaches a shell, so it is limited to letters, digits, whitespace and `. : @ / = , + - _`,
+  which rules out shell metacharacters and quoted arguments.
+
+  The init script and the selected options are now snapshotted directly after cloning instead of being read again during
+  the init script, so unsupported flags fail before dependencies are installed and an option script that rewrites
+  `package.json` cannot drop the renames and instructions the init script applies. A failing task now removes the target
+  directory it created, and `error.log` is written next to that directory rather than inside it so it survives the
+  cleanup.
+
+- [#267](https://github.com/solana-foundation/create-solana-dapp/pull/267)
+  [`2297593`](https://github.com/solana-foundation/create-solana-dapp/commit/2297593d652cef650fbd77564b8830e6d194e01d)
+  Thanks [@beeman](https://github.com/beeman)! - Migrate the init script and `package.json` schemas off the `zod/v3`
+  compatibility import so every exported schema is a native Zod 4 schema.
+
+### Patch Changes
+
+- [#253](https://github.com/solana-foundation/create-solana-dapp/pull/253)
+  [`9c84268`](https://github.com/solana-foundation/create-solana-dapp/commit/9c84268e51cb8be19a4850dac8d773a6cebe0f47)
+  Thanks [@beeman](https://github.com/beeman)! - Rename spaced init-script display names to the project display name.
+
+- [#249](https://github.com/solana-foundation/create-solana-dapp/pull/249)
+  [`41835c6`](https://github.com/solana-foundation/create-solana-dapp/commit/41835c630495c44ef49893e3221b83f5d0031ac2)
+  Thanks [@beeman](https://github.com/beeman)! - Show all Solana Mobile templates in the mobile template prompt.
+
+- [#261](https://github.com/solana-foundation/create-solana-dapp/pull/261)
+  [`d47e96d`](https://github.com/solana-foundation/create-solana-dapp/commit/d47e96d12371bf685043bcf4192933408c73ac56)
+  Thanks [@beeman](https://github.com/beeman)! - Clarify template package-manager availability errors and verbose
+  diagnostics.
+
+- [#262](https://github.com/solana-foundation/create-solana-dapp/pull/262)
+  [`4ba132e`](https://github.com/solana-foundation/create-solana-dapp/commit/4ba132e939d0d99fca1a6d24fbd666ee37ebeb2f)
+  Thanks [@beeman](https://github.com/beeman)! - Require Node.js 20.12 or newer and refresh CLI runtime dependencies.
+
+- [#259](https://github.com/solana-foundation/create-solana-dapp/pull/259)
+  [`c53c1fa`](https://github.com/solana-foundation/create-solana-dapp/commit/c53c1fa052869abe8c3386c2fc851da00c815e18)
+  Thanks [@rajanpanth](https://github.com/rajanpanth)! - Remove the template's `packageManager` field before install
+  when it does not match the effective package manager (template-configured package managers take precedence)
+
+- [#253](https://github.com/solana-foundation/create-solana-dapp/pull/253)
+  [`9c84268`](https://github.com/solana-foundation/create-solana-dapp/commit/9c84268e51cb8be19a4850dac8d773a6cebe0f47)
+  Thanks [@beeman](https://github.com/beeman)! - Support template-configured skill installation lists.
+
+- [#258](https://github.com/solana-foundation/create-solana-dapp/pull/258)
+  [`f6e484b`](https://github.com/solana-foundation/create-solana-dapp/commit/f6e484ba4554db7f0f279c90b92f14c77d66ef54)
+  Thanks [@beeman](https://github.com/beeman)! - Allow templates to require an installed package manager.
+
+- [#257](https://github.com/solana-foundation/create-solana-dapp/pull/257)
+  [`a3e8ee7`](https://github.com/solana-foundation/create-solana-dapp/commit/a3e8ee7728b12c29ca392a0b532bd89131ace430)
+  Thanks [@rajanpanth](https://github.com/rajanpanth)! - Delete non-selected package-manager lockfiles without relying
+  on a POSIX shell command.
+
 ## 4.8.5
 
 ### Patch Changes
