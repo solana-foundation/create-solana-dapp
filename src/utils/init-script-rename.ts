@@ -4,7 +4,7 @@ import { ensureTargetPath } from './ensure-target-path'
 import { GetArgsResult } from './get-args-result'
 import { getPackageJson } from './get-package-json'
 import { InitScriptRename, InitScriptRenameEntry } from './init-script-schema'
-import { searchAndReplace } from './search-and-replace'
+import { SearchAndReplaceScope, searchAndReplaceScopes } from './search-and-replace'
 import { namesValues } from './vendor/names'
 
 function compareReplacement(fromA: string, fromB: string): number {
@@ -98,24 +98,29 @@ function initScriptRenameReplacementValues(from: string, to: string): { fromName
   }
 }
 
-async function renameProject(args: GetArgsResult, verbose: boolean) {
+function projectRenameScope(args: GetArgsResult): SearchAndReplaceScope | undefined {
   const { contents } = getPackageJson(args.targetDirectory)
-  if (contents.name) {
-    if (args.verbose) {
-      log.warn(`initScriptRename: renaming template name '${contents.name}' to project name '${args.name}'`)
-    }
-    const { fromNames, toNames } = packageNameReplacementValues(contents.name, args.name)
-    await searchAndReplace(args.targetDirectory, fromNames, toNames, args.dryRun, verbose)
+  if (!contents.name) {
+    return undefined
   }
+  if (args.verbose) {
+    log.warn(`initScriptRename: renaming template name '${contents.name}' to project name '${args.name}'`)
+  }
+  const { fromNames, toNames } = packageNameReplacementValues(contents.name, args.name)
+
+  return { fromStrings: fromNames, path: args.targetDirectory, toStrings: toNames }
 }
 
-export async function initScriptRenameEntries(args: GetArgsResult, rename?: InitScriptRename) {
+export async function initScriptRenameEntryScopes(
+  args: GetArgsResult,
+  rename?: InitScriptRename,
+): Promise<SearchAndReplaceScope[]> {
   const tag = `initScriptRename`
   if (!rename) {
     if (args.verbose) {
       log.warn(`${tag}: no renames found`)
     }
-    return
+    return []
   }
 
   const deprecated = Object.keys(rename).filter((from) => rename[from].paths)
@@ -124,6 +129,8 @@ export async function initScriptRenameEntries(args: GetArgsResult, rename?: Init
       `${tag}: 'paths' is deprecated and is removed in the next major version, use 'in' instead: ${deprecated.join(', ')}`,
     )
   }
+
+  const scopes: SearchAndReplaceScope[] = []
 
   for (const from of Object.keys(rename)) {
     const to = rename[from].to.replace('{{name}}', args.name)
@@ -138,27 +145,44 @@ export async function initScriptRenameEntries(args: GetArgsResult, rename?: Init
       if (args.verbose) {
         log.warn(`${tag}: ${targetPath} -> ${fromNames.join('|')} -> ${toNames.join('|')}`)
       }
-      await searchAndReplace(targetPath, fromNames, toNames, args.dryRun, args.verbose)
+      scopes.push({ fromStrings: fromNames, path: targetPath, toStrings: toNames })
     }
   }
 
-  if (args.verbose) {
-    log.warn(`${tag}: done`)
-  }
+  return scopes
 }
 
-export async function initScriptRename(args: GetArgsResult, rename?: InitScriptRename, verbose = false) {
+export async function initScriptRename(
+  args: GetArgsResult,
+  rename?: InitScriptRename,
+  verbose = false,
+  optionScopes: SearchAndReplaceScope[] = [],
+) {
+  const tag = `initScriptRename`
   const { contents } = getPackageJson(args.targetDirectory)
-  await renameProject(args, verbose)
+  let entries = rename
 
   if (contents.name && rename?.[contents.name]) {
     const { [contents.name]: _packageName, ...remainingRename } = rename
     if (args.verbose) {
-      log.warn(`initScriptRename: skipping rename for '${contents.name}' as it matches package.json name`)
+      log.warn(`${tag}: skipping rename for '${contents.name}' as it matches package.json name`)
     }
-    await initScriptRenameEntries(args, remainingRename)
-    return
+    entries = remainingRename
   }
 
-  await initScriptRenameEntries(args, rename)
+  const projectScope = projectRenameScope(args)
+  const scopes = [
+    ...(projectScope ? [projectScope] : []),
+    ...(await initScriptRenameEntryScopes(args, entries)),
+    // Last so that a term selected by a template option wins over the same term in `rename`
+    ...optionScopes,
+  ]
+
+  // Every scope is applied in a single pass per file so that one rename never rewrites the output
+  // of another. See https://github.com/solana-foundation/create-solana-dapp/issues/193
+  await searchAndReplaceScopes(scopes, args.dryRun, args.verbose || verbose)
+
+  if (rename && args.verbose) {
+    log.warn(`${tag}: done`)
+  }
 }

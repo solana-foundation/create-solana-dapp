@@ -1,10 +1,10 @@
 // test/search-and-replace.test.ts
 import mockFs from 'mock-fs'
-import { access, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { searchAndReplace } from '../src/utils/search-and-replace'
+import { searchAndReplace, searchAndReplaceScopes } from '../src/utils/search-and-replace'
 
 describe('searchAndReplace', () => {
   let tempDir: string
@@ -72,6 +72,118 @@ describe('searchAndReplace', () => {
     expect(await readFile(join(tempDir, 'baz.txt'), 'utf8')).toBe('baz fooXbar')
     expect(await readFile(join(tempDir, 'fooXbar.txt'), 'utf8')).toBe('fooXbar')
     await expect(access(join(tempDir, 'foo.bar.txt'))).rejects.toThrow()
+  })
+
+  it('should not replace inside text it just replaced', async () => {
+    // https://github.com/solana-foundation/create-solana-dapp/issues/193
+    // The template term is `counter` and the project is named `mycountergill`, so every
+    // replacement value contains the term we are searching for. Each substitution must be
+    // applied to the original content only, never to the output of an earlier substitution.
+    await writeFile(join(tempDir, 'counter-ui.tsx'), "import { useCounterProgram } from './counter-data-access'\n")
+
+    await searchAndReplace(
+      tempDir,
+      ['Counter', 'COUNTER', 'counter'],
+      ['Mycountergill', 'MYCOUNTERGILL', 'mycountergill'],
+    )
+
+    expect(await readFile(join(tempDir, 'mycountergill-ui.tsx'), 'utf8')).toBe(
+      "import { useMycountergillProgram } from './mycountergill-data-access'\n",
+    )
+  })
+
+  it('should apply a duplicated substitution only once', async () => {
+    // `namesValues()` returns five positional variants, and for a single lowercase word three of
+    // them are identical. Repeating a substitution must not compound it.
+    await writeFile(join(tempDir, 'counter.json'), '{"metadata":{"name":"counter"}}\n')
+
+    await searchAndReplace(
+      tempDir,
+      ['counter', 'counter', 'counter'],
+      ['mycountergill', 'mycountergill', 'mycountergill'],
+    )
+
+    expect(await readdir(tempDir)).toContain('mycountergill.json')
+    expect(await readFile(join(tempDir, 'mycountergill.json'), 'utf8')).toBe('{"metadata":{"name":"mycountergill"}}\n')
+  })
+
+  it('should not let one substitution feed the next', async () => {
+    await writeFile(join(tempDir, 'names.txt'), 'counter gill\n')
+
+    await searchAndReplace(tempDir, ['counter', 'gill'], ['counter-gill', 'gill-sdk'])
+
+    expect(await readFile(join(tempDir, 'names.txt'), 'utf8')).toBe('counter-gill gill-sdk\n')
+  })
+
+  it('should prefer the longest match when two search values overlap', async () => {
+    await writeFile(join(tempDir, 'anchor.toml'), 'gill-next-tailwind-counter counter\n')
+
+    await searchAndReplace(
+      tempDir,
+      ['counter', 'gill-next-tailwind-counter'],
+      ['mycountergill', 'mycountergill-workspace'],
+    )
+
+    expect(await readFile(join(tempDir, 'anchor.toml'), 'utf8')).toBe('mycountergill-workspace mycountergill\n')
+  })
+
+  describe('searchAndReplaceScopes', () => {
+    it('should apply overlapping scopes in a single pass', async () => {
+      // The wide scope replaces a value that contains the narrow scope's search value
+      await mkdir(join(tempDir, 'anchor'))
+      await writeFile(join(tempDir, 'package.json'), '{"name":"gill-next-tailwind-counter"}\n')
+      await writeFile(join(tempDir, 'anchor', 'Anchor.toml'), 'counter = "..."\n')
+
+      await searchAndReplaceScopes([
+        { fromStrings: ['gill-next-tailwind-counter'], path: tempDir, toStrings: ['mycountergill'] },
+        { fromStrings: ['counter'], path: join(tempDir, 'package.json'), toStrings: ['mycountergill'] },
+      ])
+
+      expect(await readFile(join(tempDir, 'package.json'), 'utf8')).toBe('{"name":"mycountergill"}\n')
+      expect(await readFile(join(tempDir, 'anchor', 'Anchor.toml'), 'utf8')).toBe('counter = "..."\n')
+    })
+
+    it('should let the narrowest scope win for the same search value', async () => {
+      await mkdir(join(tempDir, 'app'))
+      await writeFile(join(tempDir, 'app', 'model.json'), '{"model":"__MODEL__"}\n')
+      await writeFile(join(tempDir, 'root.json'), '{"model":"__MODEL__"}\n')
+
+      await searchAndReplaceScopes([
+        { fromStrings: ['__MODEL__'], path: tempDir, toStrings: ['default-model'] },
+        { fromStrings: ['__MODEL__'], path: join(tempDir, 'app'), toStrings: ['selected-model'] },
+      ])
+
+      expect(await readFile(join(tempDir, 'app', 'model.json'), 'utf8')).toBe('{"model":"selected-model"}\n')
+      expect(await readFile(join(tempDir, 'root.json'), 'utf8')).toBe('{"model":"default-model"}\n')
+    })
+
+    it('should process a scope that explicitly targets a path inside an excluded directory', async () => {
+      await mkdir(join(tempDir, 'tmp'))
+      await writeFile(join(tempDir, 'tmp', 'config.json'), 'Hello excluded')
+
+      await searchAndReplaceScopes([
+        { fromStrings: ['Hello'], path: tempDir, toStrings: ['Hi'] },
+        { fromStrings: ['Hello'], path: join(tempDir, 'tmp', 'config.json'), toStrings: ['Hey'] },
+      ])
+
+      // The explicit scope opts the excluded path in, and the narrower scope wins
+      expect(await readFile(join(tempDir, 'tmp', 'config.json'), 'utf8')).toBe('Hey excluded')
+      expect(await readFile(join(tempDir, 'file1.txt'), 'utf8')).toBe('Hi world')
+    })
+
+    it('should keep replacing other scopes when one does not exist', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      await searchAndReplaceScopes([
+        { fromStrings: ['Hello'], path: join(tempDir, 'missing'), toStrings: ['Hi'] },
+        { fromStrings: ['Hello'], path: join(tempDir, 'file1.txt'), toStrings: ['Hi'] },
+      ])
+
+      expect(await readFile(join(tempDir, 'file1.txt'), 'utf8')).toBe('Hi world')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('An error occurred:', expect.any(Error))
+
+      consoleErrorSpy.mockRestore()
+    })
   })
 
   it('should exclude directories like node_modules and .git from processing', async () => {
