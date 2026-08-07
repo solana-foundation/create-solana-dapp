@@ -10,6 +10,7 @@ import {
   InitScriptSchemaSkills,
   InitScriptSchemaVersions,
   parseTemplateJson,
+  projectNameSchema,
   templateJsonGroupSchema,
   templateJsonSchema,
   templateJsonTemplateSchema,
@@ -25,6 +26,7 @@ import type {
 } from '../src/index'
 import * as initScriptSchemaModule from '../src/utils/init-script-schema'
 import * as templateSchemaModule from '../src/utils/template-schema'
+import * as validateProjectNameModule from '../src/utils/validate-project-name'
 
 const templateGroup = {
   description: 'Templates for mobile apps',
@@ -98,6 +100,14 @@ describe('package root schema exports', () => {
     expect(InitScriptSchemaSkills).toBe(initScriptSchemaModule.InitScriptSchemaSkills)
     expect(InitScriptSchemaVersions).toBe(initScriptSchemaModule.InitScriptSchemaVersions)
     expect(initScriptKey).toBe(initScriptSchemaModule.initScriptKey)
+  })
+
+  it('exports the project name schema', () => {
+    // The root export must be the same instance the CLI uses, not a copy
+    expect(projectNameSchema).toBe(validateProjectNameModule.projectNameSchema)
+
+    expect(projectNameSchema.safeParse('my-app').success).toBe(true)
+    expect(projectNameSchema.safeParse('My_App').success).toBe(false)
   })
 
   it('validates a template catalog through the root exports', () => {
