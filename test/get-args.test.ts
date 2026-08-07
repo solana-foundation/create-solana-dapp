@@ -26,6 +26,16 @@ vi.mock('../src/utils/get-prompts', () => ({
   getPrompts: vi.fn(),
 }))
 
+vi.mock('node:process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:process')>()
+  return {
+    ...actual,
+    exit: vi.fn((code?: number) => {
+      throw new Error(`process.exit(${code})`)
+    }),
+  }
+})
+
 vi.mock('../src/utils/run-version-check', () => ({
   runVersionCheck: vi.fn(),
 }))
@@ -128,6 +138,43 @@ describe('getArgs', () => {
     expect(args.name).toBe('my-app')
     expect(args.templateOptions).toEqual(['llamacpp'])
     expect(args.template).toBe(template)
+  })
+
+  it('rejects an invalid positional project name', async () => {
+    const message =
+      'Please enter a valid project name (lowercase letters, numbers, and single dashes, starting with a letter)'
+
+    await expect(
+      getArgs(['node', 'create-solana-dapp', 'My_App', '--template', 'basic', '--skip-version-check'], app),
+    ).rejects.toThrow(message)
+
+    expect(log.error).toHaveBeenCalledWith(message)
+    expect(fetchTemplateData).not.toHaveBeenCalled()
+    expect(getPrompts).not.toHaveBeenCalled()
+  })
+
+  it('rejects a positional project name whose directory already exists', async () => {
+    // The 'test' directory exists in the repo root, which is the cwd when running vitest
+    await expect(
+      getArgs(['node', 'create-solana-dapp', 'test', '--template', 'basic', '--skip-version-check'], app),
+    ).rejects.toThrow('Directory already exists')
+
+    expect(log.error).toHaveBeenCalledWith('Directory already exists')
+    expect(fetchTemplateData).not.toHaveBeenCalled()
+    expect(getPrompts).not.toHaveBeenCalled()
+  })
+
+  it('skips project name validation for informational list commands', async () => {
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await expect(
+      getArgs(['node', 'create-solana-dapp', 'My_App', '--list-template-ids', '--skip-version-check'], app),
+    ).rejects.toThrow('process.exit(0)')
+
+    expect(log.error).not.toHaveBeenCalled()
+    expect(consoleLog).toHaveBeenCalledWith(JSON.stringify([template.id]))
+
+    consoleLog.mockRestore()
   })
 
   it('parses positional and registered arguments after a template-defined flag', async () => {
