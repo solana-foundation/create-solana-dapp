@@ -62,13 +62,16 @@ function findKnownOption(command: Command, arg: string) {
   const shortFlag = arg.startsWith('-') && !arg.startsWith('--') ? arg.slice(0, 2) : undefined
   return command.options.find(
     (option) =>
-      (longFlag !== undefined && option.long === longFlag) || (shortFlag !== undefined && option.short === shortFlag),
+      (longFlag !== undefined && (option.long === longFlag || option.short === longFlag)) ||
+      (shortFlag !== undefined && option.short === shortFlag),
   )
 }
 
 function hasInlineValue(longFlag: string | undefined, shortFlag: string | undefined, arg: string): boolean {
   if (longFlag !== undefined && arg.startsWith('--')) {
-    return arg.startsWith(`${longFlag}=`)
+    // The arg may use a long alias (e.g. `--pm`) whose token differs from the
+    // option's canonical long, so detect the inline value on the arg itself.
+    return arg.includes('=')
   }
   return shortFlag !== undefined && arg.startsWith(shortFlag) && arg !== shortFlag
 }

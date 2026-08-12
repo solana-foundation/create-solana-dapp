@@ -59,4 +59,29 @@ describe('extractTemplateOptionFlags', () => {
       extractTemplateOptionFlags(command(), ['node', 'create-solana-dapp', 'my-app', '--engine=ollama']),
     ).toThrow('Template options must be boolean long flags')
   })
+
+  it('preserves a long alias flag and its space-separated value', () => {
+    // Commander stores the alias of a two-long-token option
+    // (`--pm, --package-manager`) in `option.short`, so the alias must still be
+    // recognised as a known option rather than treated as a template flag.
+    const commandWithPm = () =>
+      new Command().argument('[name]').option('--pm, --package-manager <package-manager>').option('--skip-install')
+    const argv = ['node', 'create-solana-dapp', 'my-app', '--pm', 'pnpm']
+
+    expect(extractTemplateOptionFlags(commandWithPm(), argv)).toEqual({
+      argv: ['node', 'create-solana-dapp', 'my-app', '--pm', 'pnpm'],
+      templateOptions: [],
+    })
+  })
+
+  it('detects an inline value written with a long alias flag', () => {
+    const commandWithPm = () =>
+      new Command().argument('[name]').option('--pm, --package-manager <package-manager>').option('--skip-install')
+    const argv = ['node', 'create-solana-dapp', 'my-app', '--pm=pnpm', '--ollama']
+
+    expect(extractTemplateOptionFlags(commandWithPm(), argv)).toEqual({
+      argv: ['node', 'create-solana-dapp', 'my-app', '--pm=pnpm'],
+      templateOptions: ['ollama'],
+    })
+  })
 })
