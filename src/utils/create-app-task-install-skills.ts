@@ -2,7 +2,7 @@ import { log } from '@clack/prompts'
 import { GetArgsResult } from './get-args-result'
 import { getPackageJson } from './get-package-json'
 import { initScriptKey } from './init-script-schema'
-import { execAndWait } from './vendor/child-process-utils'
+import { CreateAppError, execAndWait } from './vendor/child-process-utils'
 import { Task } from './vendor/clack-tasks'
 
 const defaultSkills = ['https://github.com/solana-foundation/solana-dev-skill']
@@ -18,13 +18,18 @@ export function createAppTaskInstallSkills(args: GetArgsResult): Task {
         return result({ message: 'Skipped skill installation' })
       }
 
-      const installed = await installSkills(args, skills)
+      const failures = await installSkills(args, skills)
+      const installed = skills.length - failures.length
+
+      for (const { reason, skill } of failures) {
+        log.warn(`Failed to install skill ${skill}: ${reason}`)
+      }
 
       if (installed === 0) {
         return result({ message: 'Failed to install skills' })
       }
 
-      if (installed < skills.length) {
+      if (failures.length > 0) {
         return result({ message: `Installed ${installed}/${skills.length} skills` })
       }
 
@@ -35,27 +40,41 @@ export function createAppTaskInstallSkills(args: GetArgsResult): Task {
 }
 
 async function installSkills(args: GetArgsResult, skills: string[]) {
-  const installs: boolean[] = []
+  const failures: { reason: string; skill: string }[] = []
   for (const skill of skills) {
-    installs.push(await installSkill(args, skill))
+    const reason = await installSkill(args, skill)
+    if (reason !== undefined) {
+      failures.push({ reason, skill })
+    }
   }
-  return installs.filter(Boolean).length
+  return failures
 }
 
-async function installSkill(args: GetArgsResult, skill: string) {
+// Resolves to undefined when the install succeeds, or to the failure reason
+async function installSkill(args: GetArgsResult, skill: string): Promise<string | undefined> {
   try {
     if (args.verbose) {
       log.warn(`Installing skill ${skill}`)
     }
 
     await execAndWait(`npx -y skills add ${shellQuote(skill)} --skill "*" -y`, args.targetDirectory)
-    return true
+    return undefined
   } catch (error) {
-    if (args.verbose) {
-      log.error(`Error installing skill ${skill}: ${error}`)
-    }
-    return false
+    return describeSkillInstallError(error)
   }
+}
+
+// The skills CLI explains a failed install on stderr (e.g. a SKILL.md it can't parse), so the
+// first line of that output is the reason; the log file written by execAndWait has the rest.
+function describeSkillInstallError(error: unknown): string {
+  if (error instanceof CreateAppError) {
+    const firstLine = error.logMessage
+      .split('\n')
+      .find((line) => line.trim().length > 0)
+      ?.trim()
+    return firstLine ? `${firstLine} (full log: ${error.logFile})` : `see ${error.logFile}`
+  }
+  return `${error}`
 }
 
 function shellQuote(value: string) {
