@@ -1,10 +1,15 @@
 // test/search-and-replace.test.ts
-import mockFs from 'mock-fs'
 import { access, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { searchAndReplace } from '../src/utils/search-and-replace'
+
+// Wrap readFile so the error handling test can make a single read fail
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>()
+  return { ...actual, readFile: vi.fn(actual.readFile) }
+})
 
 describe('searchAndReplace', () => {
   let tempDir: string
@@ -119,15 +124,8 @@ describe('searchAndReplace', () => {
   it('should handle errors gracefully', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    // Mock the file system and simulate an error for readFile
-    mockFs({
-      [tempDir]: {
-        'file1.txt': mockFs.file({
-          content: 'Hello world',
-          mode: 0o000, // No read permissions, to trigger an error
-        }),
-      },
-    })
+    // Simulate an unreadable file
+    vi.mocked(readFile).mockRejectedValueOnce(new Error('EACCES: permission denied'))
 
     // Run searchAndReplace and expect it to handle the error without throwing
     await searchAndReplace(tempDir, ['Hello'], ['Hi'], false, true)
@@ -135,8 +133,6 @@ describe('searchAndReplace', () => {
     // Verify that an error was logged
     expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error processing file'), expect.any(Error))
 
-    // Restore the mocked file system and the console spy
-    mockFs.restore()
     consoleErrorSpy.mockRestore()
   })
 })
