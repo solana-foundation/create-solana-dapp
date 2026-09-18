@@ -54,7 +54,7 @@ export type {
   TemplateJsonGroup,
   TemplateJsonTemplate,
 } from './utils/template-schema'
-export { validateProjectName } from './utils/validate-project-name'
+export { projectNameSchema, validateProjectName } from './utils/validate-project-name'
 export { detectInvokedPackageManager } from './utils/vendor/package-manager'
 export type { PackageManager } from './utils/vendor/package-manager'
 
