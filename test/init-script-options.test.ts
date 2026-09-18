@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GetArgsResult } from '../src/utils/get-args-result'
 import { initScriptOptions, resolveInitScriptOptions } from '../src/utils/init-script-options'
-import { initScriptRenameEntries } from '../src/utils/init-script-rename'
+import { initScriptRenameEntryScopes } from '../src/utils/init-script-rename'
 import { InitScriptOptions } from '../src/utils/init-script-schema'
 
 vi.mock('../src/utils/init-script-rename', () => ({
-  initScriptRenameEntries: vi.fn(),
+  initScriptRenameEntryScopes: vi.fn(),
 }))
 
 const options: InitScriptOptions = {
@@ -63,10 +63,13 @@ describe('initScriptOptions', () => {
     vi.clearAllMocks()
   })
 
-  it('applies selected renames and returns selected instructions', async () => {
-    const instructions = await initScriptOptions(args, resolveInitScriptOptions(options, ['llamacpp']))
+  it('collects selected renames and returns selected instructions', async () => {
+    const scope = { fromStrings: ['__MODEL__'], path: '/template/request.json', toStrings: ['local-model'] }
+    vi.mocked(initScriptRenameEntryScopes).mockResolvedValue([scope])
 
-    expect(initScriptRenameEntries).toHaveBeenCalledWith(expect.any(Object), options.llamacpp.rename)
-    expect(instructions).toEqual(['Start llama.cpp'])
+    const result = await initScriptOptions(args, resolveInitScriptOptions(options, ['llamacpp']))
+
+    expect(initScriptRenameEntryScopes).toHaveBeenCalledWith(expect.any(Object), options.llamacpp.rename)
+    expect(result).toEqual({ instructions: ['Start llama.cpp'], scopes: [scope] })
   })
 })

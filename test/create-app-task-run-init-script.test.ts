@@ -39,7 +39,7 @@ describe('createAppTaskRunInitScript', () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(initScriptOptions).mockResolvedValue(['Option instruction'])
+    vi.mocked(initScriptOptions).mockResolvedValue({ instructions: ['Option instruction'], scopes: [] })
   })
 
   it('is skipped when the init script is skipped', () => {
@@ -64,7 +64,7 @@ describe('createAppTaskRunInitScript', () => {
     const value = await result.task((input) => input)
 
     expect(initScriptVersion).toHaveBeenCalledWith(init.versions, false)
-    expect(initScriptRename).toHaveBeenCalledWith(args, init.rename, false)
+    expect(initScriptRename).toHaveBeenCalledWith(args, init.rename, false, [])
     expect(initScriptDelete).toHaveBeenCalledWith(args)
     expect(value).toEqual({
       instructions: ['Option instruction', 'Run pnpm install'],

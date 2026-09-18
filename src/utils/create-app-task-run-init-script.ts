@@ -33,12 +33,12 @@ export function createAppTaskRunInitScript(
 
         await initScriptVersion(init.versions, args.verbose)
 
-        const optionInstructions = await initScriptOptions(args, options)
+        const optionResult = await initScriptOptions(args, options)
 
-        await initScriptRename(args, init.rename, args.verbose)
+        await initScriptRename(args, init.rename, args.verbose, optionResult.scopes)
 
         const instructions: string[] = initScriptInstructions(
-          [...optionInstructions, ...(init.instructions ?? [])],
+          [...optionResult.instructions, ...(init.instructions ?? [])],
           args.verbose,
         )
           ?.filter(Boolean)

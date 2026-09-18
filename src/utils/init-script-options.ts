@@ -1,10 +1,17 @@
 import { GetArgsResult } from './get-args-result'
-import { initScriptRenameEntries } from './init-script-rename'
+import { initScriptRenameEntryScopes } from './init-script-rename'
 import { InitScriptOptions } from './init-script-schema'
+import { SearchAndReplaceScope } from './search-and-replace'
 
 export interface SelectedTemplateOption {
   name: string
   value: InitScriptOptions[string]
+}
+
+export interface InitScriptOptionsResult {
+  instructions: string[]
+  /** Applied together with the other renames so that no rename rewrites another one's output. */
+  scopes: SearchAndReplaceScope[]
 }
 
 /**
@@ -63,12 +70,16 @@ export function resolveInitScriptOptions(
 }
 
 /**
- * Applies the selected template option transformations and returns their
- * post-create instructions.
+ * Collects the selected template option transformations and their post-create instructions.
  */
-export async function initScriptOptions(args: GetArgsResult, selected: SelectedTemplateOption[]): Promise<string[]> {
+export async function initScriptOptions(
+  args: GetArgsResult,
+  selected: SelectedTemplateOption[],
+): Promise<InitScriptOptionsResult> {
+  const scopes: SearchAndReplaceScope[] = []
   for (const option of selected) {
-    await initScriptRenameEntries(args, option.value.rename)
+    scopes.push(...(await initScriptRenameEntryScopes(args, option.value.rename)))
   }
-  return selected.flatMap((option) => option.value.instructions ?? [])
+
+  return { instructions: selected.flatMap((option) => option.value.instructions ?? []), scopes }
 }

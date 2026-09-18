@@ -4,7 +4,7 @@ import { ensureTargetPath } from '../src/utils/ensure-target-path'
 import { GetArgsResult } from '../src/utils/get-args-result'
 import { getPackageJson } from '../src/utils/get-package-json'
 import { initScriptRename } from '../src/utils/init-script-rename'
-import { searchAndReplace } from '../src/utils/search-and-replace'
+import { searchAndReplaceScopes } from '../src/utils/search-and-replace'
 import { namesValues } from '../src/utils/vendor/names'
 
 vi.mock('../src/utils/ensure-target-path')
@@ -22,6 +22,11 @@ describe('initScriptRename', () => {
   const packageJsonName = 'foo-bar'
 
   const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+  /** All renames are handed to `searchAndReplaceScopes` in one call, so each entry is a scope. */
+  function projectScope(toStrings: string[]) {
+    return { fromStrings: ['FooBar', 'foo-bar', 'foo_bar', 'foobar'], path: '/template', toStrings }
+  }
 
   beforeEach(() => {
     vi.resetAllMocks()
@@ -54,10 +59,8 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args)
 
-    expect(searchAndReplace).toHaveBeenCalledWith(
-      args.targetDirectory,
-      ['FooBar', 'foo-bar', 'foo_bar', 'foobar'],
-      ['MyApp', 'my-app', 'my_app', 'myapp'],
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      [projectScope(['MyApp', 'my-app', 'my_app', 'myapp'])],
       false,
       false,
     )
@@ -78,10 +81,14 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args, rename)
 
-    expect(searchAndReplace).toHaveBeenLastCalledWith(
-      '/template/app.json',
-      fromNames,
-      ['MyUnicorn2', 'MY_UNICORN2', 'my-unicorn2', 'My Unicorn2', 'myUnicorn2'],
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        {
+          fromStrings: fromNames,
+          path: '/template/app.json',
+          toStrings: ['MyUnicorn2', 'MY_UNICORN2', 'my-unicorn2', 'My Unicorn2', 'myUnicorn2'],
+        },
+      ]),
       false,
       false,
     )
@@ -102,10 +109,14 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args, rename)
 
-    expect(searchAndReplace).toHaveBeenLastCalledWith(
-      '/template/app.json',
-      ['ExampleApp', 'EXAMPLE_APP', 'example-app', 'Example App', 'exampleApp'],
-      ['MyUnicorn2', 'MY_UNICORN2', 'my-unicorn2', 'My Unicorn2', 'myUnicorn2'],
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        {
+          fromStrings: ['ExampleApp', 'EXAMPLE_APP', 'example-app', 'Example App', 'exampleApp'],
+          path: '/template/app.json',
+          toStrings: ['MyUnicorn2', 'MY_UNICORN2', 'my-unicorn2', 'My Unicorn2', 'myUnicorn2'],
+        },
+      ]),
       false,
       false,
     )
@@ -128,10 +139,14 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args, rename)
 
-    expect(searchAndReplace).toHaveBeenLastCalledWith(
-      '/template/request.json',
-      ['InferenceModel', 'INFERENCE_MODEL', 'inference-model', 'inferenceModel'],
-      ['Qwen306b', 'QWEN306B', 'qwen3:0.6b', 'qwen306b'],
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        {
+          fromStrings: ['InferenceModel', 'INFERENCE_MODEL', 'inference-model', 'inferenceModel'],
+          path: '/template/request.json',
+          toStrings: ['Qwen306b', 'QWEN306B', 'qwen3:0.6b', 'qwen306b'],
+        },
+      ]),
       false,
       false,
     )
@@ -142,10 +157,8 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args)
 
-    expect(searchAndReplace).toHaveBeenCalledWith(
-      args.targetDirectory,
-      expect.any(Array),
-      expect.any(Array),
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      [expect.objectContaining({ path: args.targetDirectory })],
       true,
       false,
     )
@@ -156,8 +169,25 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args, undefined)
 
-    expect(searchAndReplace).toHaveBeenCalledTimes(1)
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      [projectScope(['TestProject', 'test-project', 'test_project', 'testproject'])],
+      false,
+      false,
+    )
     expect(log.warn).not.toHaveBeenCalled()
+  })
+
+  it('should apply template option renames in the same pass, after the rename entries', async () => {
+    const args = { ...baseArgs }
+    const rename = { example: { in: ['some/path/to/file'], to: '{{name}}Example' } }
+    const optionScope = { fromStrings: ['__MODEL__'], path: '/template/request.json', toStrings: ['qwen3:0.6b'] }
+    vi.mocked(namesValues).mockReturnValue(['Example'])
+    vi.mocked(ensureTargetPath).mockResolvedValue(true)
+
+    await initScriptRename(args, rename, false, [optionScope])
+
+    expect(searchAndReplaceScopes).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(searchAndReplaceScopes).mock.calls[0][0].at(-1)).toStrictEqual(optionScope)
   })
 
   it('should perform search and replace based on rename instructions', async () => {
@@ -175,10 +205,10 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args, rename)
 
-    expect(searchAndReplace).toHaveBeenCalledWith(
-      expect.stringContaining('some/path/to/file'),
-      exampleNames,
-      newNameExamples,
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        { fromStrings: exampleNames, path: '/template/some/path/to/file', toStrings: newNameExamples },
+      ]),
       args.dryRun,
       args.verbose,
     )
@@ -199,10 +229,10 @@ describe('initScriptRename', () => {
 
     await initScriptRename(args, rename)
 
-    expect(searchAndReplace).toHaveBeenCalledWith(
-      expect.stringContaining('some/path/to/file'),
-      exampleNames,
-      newNameExamples,
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        { fromStrings: exampleNames, path: '/template/some/path/to/file', toStrings: newNameExamples },
+      ]),
       args.dryRun,
       args.verbose,
     )
@@ -270,7 +300,11 @@ describe('initScriptRename', () => {
     await initScriptRename(args, rename)
 
     expect(log.error).toHaveBeenCalledWith(`initScriptRename: target does not exist /template/nonexistent/path/to/file`)
-    //been called once for the package.json rename
-    expect(searchAndReplace).toHaveBeenCalledTimes(1)
+    // Only the package.json rename is left, the nonexistent path does not become a scope
+    expect(searchAndReplaceScopes).toHaveBeenCalledWith(
+      [expect.objectContaining({ path: args.targetDirectory })],
+      false,
+      true,
+    )
   })
 })
