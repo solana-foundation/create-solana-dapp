@@ -4,10 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAppTaskInstallSkills } from '../src/utils/create-app-task-install-skills'
 import { GetArgsResult } from '../src/utils/get-args-result'
 import { initScriptKey } from '../src/utils/init-script-schema'
-import { execAndWait } from '../src/utils/vendor/child-process-utils'
+import { CreateAppError, execAndWait } from '../src/utils/vendor/child-process-utils'
 
 vi.mock('node:fs')
-vi.mock('../src/utils/vendor/child-process-utils', () => ({
+vi.mock('../src/utils/vendor/child-process-utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/utils/vendor/child-process-utils')>()),
   execAndWait: vi.fn(),
 }))
 vi.mock('@clack/prompts', () => ({
@@ -87,18 +88,49 @@ describe('createAppTaskInstallSkills', () => {
     expect(execAndWait).not.toHaveBeenCalled()
   })
 
-  it('should continue after a skill install fails', async () => {
+  it('should continue after a skill install fails and report which skill failed', async () => {
     writePackageJson({
       skills: ['https://github.com/example/alpha-skill', 'https://github.com/example/beta-skill'],
     })
     vi.mocked(execAndWait).mockRejectedValueOnce(new Error('install failed'))
 
-    const result = await runTask({ ...baseArgs, verbose: true })
+    const result = await runTask()
 
     expect(result).toEqual({ message: 'Installed 1/2 skills' })
     expect(execAndWait).toHaveBeenCalledTimes(2)
-    expect(log.error).toHaveBeenCalledWith(
-      'Error installing skill https://github.com/example/alpha-skill: Error: install failed',
+    expect(log.warn).toHaveBeenCalledWith(
+      'Failed to install skill https://github.com/example/alpha-skill: Error: install failed',
+    )
+  })
+
+  it('should report the reason and log file when the skills CLI fails', async () => {
+    writePackageJson({
+      skills: ['https://github.com/example/alpha-skill'],
+    })
+    vi.mocked(execAndWait).mockImplementationOnce(rejectWithLog('Skipped SKILL.md — YAML parse error\nmore details'))
+
+    const result = await runTask()
+
+    expect(result).toEqual({ message: 'Failed to install skills' })
+    expect(log.warn).toHaveBeenCalledWith(
+      'Failed to install skill https://github.com/example/alpha-skill: Skipped SKILL.md — YAML parse error (full log: /template.skill-1.error.log)',
+    )
+  })
+
+  it('should keep a separate log file for each failed skill', async () => {
+    writePackageJson({
+      skills: ['https://github.com/example/alpha-skill', 'https://github.com/example/beta-skill'],
+    })
+    vi.mocked(execAndWait)
+      .mockImplementationOnce(rejectWithLog('alpha failed'))
+      .mockImplementationOnce(rejectWithLog('beta failed'))
+
+    await runTask()
+
+    expect(fs.readFileSync('/template.skill-1.error.log', 'utf8')).toBe('alpha failed')
+    expect(fs.readFileSync('/template.skill-2.error.log', 'utf8')).toBe('beta failed')
+    expect(log.warn).toHaveBeenCalledWith(
+      'Failed to install skill https://github.com/example/beta-skill: beta failed (full log: /template.skill-2.error.log)',
     )
   })
 
@@ -130,6 +162,14 @@ describe('createAppTaskInstallSkills', () => {
 
     expect(task.enabled).toBe(false)
   })
+
+  // Mimics execAndWait, which writes every failure to the same log file
+  function rejectWithLog(message: string) {
+    return async () => {
+      fs.writeFileSync('/template.error.log', message)
+      throw new CreateAppError(message, 1, '/template.error.log')
+    }
+  }
 
   async function runTask(args = baseArgs) {
     return createAppTaskInstallSkills(args).task((value) => value)
