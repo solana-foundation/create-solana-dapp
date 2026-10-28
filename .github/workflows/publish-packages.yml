@@ -23,7 +23,7 @@ jobs:
       has_changesets: ${{ steps.check.outputs.has_changesets }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check for changesets
         id: check
@@ -42,7 +42,7 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -59,19 +59,18 @@ jobs:
         run: pnpm exec publint --pack pnpm
 
       - name: Setup npm registry auth
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Create Changesets Pull Request or Publish
-        uses: changesets/action@v1
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          commit: 'chore: version packages'
-          publish: pnpm publish-packages
-          title: 'chore: version packages'
-          version: pnpm changeset version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: version packages'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-title: 'chore: version packages'
+          publish-script: pnpm publish-packages
+          version-script: pnpm changeset version
 
   canary:
     name: Publish Canary
@@ -85,7 +84,7 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Dependencies
         uses: ./.github/workflows/actions/install-dependencies
@@ -105,7 +104,7 @@ jobs:
         run: pnpm exec publint --pack pnpm
 
       - name: Setup npm registry auth
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           registry-url: 'https://registry.npmjs.org'
 
