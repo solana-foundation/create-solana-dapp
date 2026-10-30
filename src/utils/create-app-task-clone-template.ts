@@ -2,6 +2,7 @@ import { log } from '@clack/prompts'
 import { downloadTemplate } from 'giget'
 import { cpSync, existsSync, mkdirSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
+import { relative, sep } from 'node:path'
 import { corruptArchiveMessage, isCorruptArchiveError } from './corrupt-archive-error'
 import { GetArgsResult } from './get-args-result'
 import { Task, taskFail } from './vendor/clack-tasks'
@@ -69,11 +70,12 @@ export function createAppTaskCloneTemplate(args: GetArgsResult): Task {
           mkdirSync(args.targetDirectory, { recursive: true })
 
           // Copy the local template
+          const skipDirs = new Set(['node_modules', '.git', 'dist', 'target'])
           cpSync(localPath, args.targetDirectory, {
             filter: (src) => {
-              // Skip common build/dependency directories
-              const skipDirs = ['node_modules', '.git', 'dist', 'target']
-              return !skipDirs.some((dir) => src.includes(dir))
+              // Match directory names within the template, not substrings in its absolute path.
+              const relativePath = relative(localPath, src)
+              return !relativePath.split(sep).some((segment) => skipDirs.has(segment))
             },
             recursive: true,
           })
