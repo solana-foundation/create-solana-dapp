@@ -46,6 +46,27 @@ describe('getArgs', () => {
     vi.mocked(getPrompts).mockResolvedValue({})
   })
 
+  it.each(['-h', '--help'])('prints help for %s without fetching templates or prompting', async (flag) => {
+    const exit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('help exit')
+    })
+    const output = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
+    vi.mocked(fetchTemplateData).mockRejectedValue(new Error('Network unavailable'))
+
+    try {
+      await expect(getArgs(['node', 'create-solana-dapp', flag], app)).rejects.toThrow('help exit')
+
+      expect(exit).toHaveBeenCalledWith(0)
+      expect(output.mock.calls.map(([chunk]) => String(chunk)).join('')).toContain('Usage: create-solana-dapp')
+      expect(fetchTemplateData).not.toHaveBeenCalled()
+      expect(runVersionCheck).not.toHaveBeenCalled()
+      expect(getPrompts).not.toHaveBeenCalled()
+    } finally {
+      exit.mockRestore()
+      output.mockRestore()
+    }
+  })
+
   it('parses --templates-url as a URL value instead of a positional argument', async () => {
     let promptName = ''
     let promptTemplate: Template | undefined
