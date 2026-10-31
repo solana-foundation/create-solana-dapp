@@ -27,14 +27,23 @@ export function createAppTaskRunOptionScript(args: GetArgsResult, options: Selec
             continue
           }
 
-          // Only the script name is validated here, the rest of the value is passed through as
-          // arguments. The schema already rejects shell metacharacters, so collapsing whitespace runs
-          // to single spaces cannot corrupt a quoted argument and a newline cannot end the command.
-          const command = run.trim().split(/\s+/).join(' ')
-          const [script] = command.split(' ')
+          // The schema rejects shell metacharacters and quotes, so whitespace only separates tokens.
+          const [script, ...scriptArguments] = run.trim().split(/\s+/)
           if (!contents.scripts?.[script]) {
             throw new Error(`Template option --${option.name} requires a "${script}" script in package.json`)
           }
+
+          // Accept the npm-style separator used in template metadata, but do not forward it to
+          // package managers that pass it literally to the script. Preserve any later separators.
+          if (scriptArguments[0] === '--') {
+            scriptArguments.shift()
+          }
+          // Bun consumes a leading script separator even after its own options have ended.
+          if (args.packageManager === 'bun' && scriptArguments[0] === '--') {
+            scriptArguments.unshift('--')
+          }
+          // End package-manager option parsing before the script name so flags reach the script.
+          const command = ['--', script, ...scriptArguments].join(' ')
 
           if (args.verbose) {
             log.warn(`Running ${args.packageManager} run ${command}`)
