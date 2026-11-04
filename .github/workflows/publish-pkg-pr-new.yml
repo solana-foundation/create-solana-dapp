@@ -8,6 +8,9 @@ env:
   # See https://consoledonottrack.com/
   DO_NOT_TRACK: '1'
 
+permissions:
+  contents: read
+
 jobs:
   build-and-publish-snapshots-to-npm:
     runs-on: ubuntu-latest

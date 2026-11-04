@@ -7,6 +7,9 @@ env:
   DO_NOT_TRACK: '1'
   TURBO_CONCURRENCY: 1
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
