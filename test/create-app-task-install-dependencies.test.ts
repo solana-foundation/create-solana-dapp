@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createAppTaskInstallDependencies } from '../src/utils/create-app-task-install-dependencies'
 import type { GetArgsResult } from '../src/utils/get-args-result'
 import { execAndWait } from '../src/utils/vendor/child-process-utils'
+import { tasks } from '../src/utils/vendor/clack-tasks'
+import * as packageManager from '../src/utils/vendor/package-manager'
 
 const mockedFs = vi.hoisted(() => ({ disappearingPath: undefined as string | undefined }))
 
@@ -30,6 +32,37 @@ afterEach(async () => {
 })
 
 describe('createAppTaskInstallDependencies', () => {
+  it('skips package manager discovery when installation is disabled', async () => {
+    const getCommand = vi.spyOn(packageManager, 'getPackageManagerCommand').mockImplementation(() => {
+      throw new Error('Yarn is unavailable')
+    })
+
+    try {
+      const task = createAppTaskInstallDependencies({ packageManager: 'yarn', skipInstall: true } as GetArgsResult)
+
+      await expect(tasks([task])).resolves.toEqual([])
+      expect(getCommand).not.toHaveBeenCalled()
+      expect(execAndWait).not.toHaveBeenCalled()
+    } finally {
+      getCommand.mockRestore()
+    }
+  })
+
+  it('still reports an unavailable package manager when installation runs', async () => {
+    const getCommand = vi.spyOn(packageManager, 'getPackageManagerCommand').mockImplementation(() => {
+      throw new Error('Yarn is unavailable')
+    })
+
+    try {
+      const task = createAppTaskInstallDependencies({ packageManager: 'yarn', skipInstall: false } as GetArgsResult)
+
+      await expect(task.task((value) => value)).rejects.toThrow('Yarn is unavailable')
+      expect(execAndWait).not.toHaveBeenCalled()
+    } finally {
+      getCommand.mockRestore()
+    }
+  })
+
   it('removes lockfiles from other package managers without a shell command', async () => {
     const targetDirectory = await mkdtemp(join(tmpdir(), 'create-solana-dapp-install-'))
     temporaryDirectories.push(targetDirectory)
