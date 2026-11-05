@@ -52,6 +52,24 @@ describe('initScriptDelete', () => {
     expect(updatedContents).not.toHaveProperty(initScriptKey)
   })
 
+  it('should remove the template catalog fields from package.json', () => {
+    const packageJsonContent = {
+      description: 'A template',
+      displayName: 'Template',
+      [initScriptKey]: { someKey: 'someValue' },
+      keywords: ['solana'],
+      name: 'my-app',
+      usecase: 'Starter',
+    }
+
+    fs.mkdirSync(targetDirectory, { recursive: true })
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJsonContent))
+
+    initScriptDelete(baseArgs)
+
+    expect(getPackageJson(targetDirectory).contents).toEqual({ name: 'my-app' })
+  })
+
   it('should not throw error if init script key does not exist', () => {
     const packageJsonContent = {
       name: 'my-app',
@@ -80,7 +98,9 @@ describe('initScriptDelete', () => {
 
     initScriptDelete(baseArgs)
 
-    expect(log.warn).toHaveBeenCalledWith(`initScriptDelete: deleted ${initScriptKey} from package.json`)
+    expect(log.warn).toHaveBeenCalledWith(
+      `initScriptDelete: deleted ${initScriptKey} and template catalog fields from package.json`,
+    )
     consoleLogSpy.mockRestore()
   })
 })
