@@ -60,7 +60,9 @@ export function extractTemplateOptionFlags(command: Command, argv: string[]): Ex
 function findKnownOption(command: Command, arg: string) {
   const longFlag = arg.startsWith('--') ? arg.split('=', 1)[0] : undefined
   const shortFlag = arg.startsWith('-') && !arg.startsWith('--') ? arg.slice(0, 2) : undefined
-  return command.options.find(
+  // Commander keeps its built-in help option outside `command.options`. Keep registered hidden
+  // options too, since they are accepted by the parser even though they are absent from help.
+  return [...command.options, ...command.createHelp().visibleOptions(command)].find(
     (option) =>
       (longFlag !== undefined && option.long === longFlag) || (shortFlag !== undefined && option.short === shortFlag),
   )

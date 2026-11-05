@@ -7,6 +7,25 @@ function command() {
 }
 
 describe('extractTemplateOptionFlags', () => {
+  it.each(['-?', '--usage'])('preserves a customized help flag %s', (flag) => {
+    const configuredCommand = command().helpOption('-?, --usage')
+    const argv = ['node', 'create-solana-dapp', '--ollama', flag]
+
+    expect(extractTemplateOptionFlags(configuredCommand, argv)).toEqual({
+      argv: ['node', 'create-solana-dapp', flag],
+      templateOptions: ['ollama'],
+    })
+  })
+
+  it('allows a template option named help when built-in help is disabled', () => {
+    const argv = ['node', 'create-solana-dapp', '--help']
+
+    expect(extractTemplateOptionFlags(command().helpOption(false), argv)).toEqual({
+      argv: ['node', 'create-solana-dapp'],
+      templateOptions: ['help'],
+    })
+  })
+
   it('extracts boolean long flags while preserving known arguments', () => {
     const argv = ['node', 'create-solana-dapp', 'my-app', '--template', 'pay-gate-inference', '--ollama']
 
