@@ -10,5 +10,8 @@
   ],
   "commit": false,
   "linked": [],
+  "snapshot": {
+    "useCalculatedVersion": true
+  },
   "updateInternalDependencies": "patch"
 }
