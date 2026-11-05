@@ -14,6 +14,7 @@ import { listTemplates } from './list-templates'
 import { listVersions } from './list-versions'
 import { runVersionCheck } from './run-version-check'
 import { Template } from './template'
+import { validateProjectName } from './validate-project-name'
 import { PackageManager } from './vendor/package-manager'
 
 const minimalTemplateName = 'nextjs-anchor'
@@ -60,6 +61,19 @@ Examples:
   // Get the options from the command line
   const result = input.opts()
   const verbose = result.verbose ?? false
+
+  // The positional name flows into the generated package.json and the rename search key, so it
+  // must pass the same validation as the interactive prompt. Validate before fetching template
+  // data so a network failure can't mask the name error, but not for the informational list
+  // commands, which only use the name to build a hint.
+  const isListCommand = result.listTemplateIds || result.listTemplates || result.listVersions
+  if (name && !isListCommand) {
+    const nameError = validateProjectName(name)
+    if (nameError) {
+      log.error(nameError)
+      throw new Error(nameError)
+    }
+  }
 
   // Fetch the templates url, parse the template data and create menu items following our menu config
   const { items, templates } = await fetchTemplateData({ config: getMenuConfig(), url: result.templatesUrl, verbose })
