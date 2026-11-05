@@ -59,15 +59,37 @@ describe('createAppTaskRunOptionScript', () => {
     expect(task.enabled).toBe(false)
   })
 
-  it('runs the declared script with the selected package manager', async () => {
+  it.each([
+    ['npm', 'npm run -- reset-project --yes'],
+    ['pnpm', 'pnpm run -- reset-project --yes'],
+    ['yarn', 'yarn run -- reset-project --yes'],
+    ['bun', 'bun run -- reset-project --yes'],
+  ] as const)('runs the declared script with %s', async (packageManager, expectedCommand) => {
     writePackageJson({ 'reset-project': 'node ./scripts/reset-project.js' })
     vi.mocked(execAndWait).mockResolvedValue({ code: 0, stdout: '' })
 
-    const task = createAppTaskRunOptionScript({ ...args, packageManager: 'pnpm' }, [resetProject])
+    const task = createAppTaskRunOptionScript({ ...args, packageManager }, [resetProject])
     const result = await task.task((value) => value)
 
-    expect(execAndWait).toHaveBeenCalledWith('pnpm run reset-project -- --yes', targetDirectory)
+    expect(execAndWait).toHaveBeenCalledWith(expectedCommand, targetDirectory)
     expect(result).toEqual({ message: 'Ran --reset-project' })
+  })
+
+  it.each([
+    ['npm', 'npm run -- reset-project -- --yes'],
+    ['pnpm', 'pnpm run -- reset-project -- --yes'],
+    ['yarn', 'yarn run -- reset-project -- --yes'],
+    ['bun', 'bun run -- reset-project -- -- --yes'],
+  ] as const)('preserves a literal script separator with %s', async (packageManager, expectedCommand) => {
+    writePackageJson({ 'reset-project': 'node ./scripts/reset-project.js' })
+    vi.mocked(execAndWait).mockResolvedValue({ code: 0, stdout: '' })
+
+    const task = createAppTaskRunOptionScript({ ...args, packageManager }, [
+      { name: 'reset-project', value: { run: 'reset-project -- -- --yes' } },
+    ])
+    await task.task((value) => value)
+
+    expect(execAndWait).toHaveBeenCalledWith(expectedCommand, targetDirectory)
   })
 
   it('collapses whitespace in the run value so the arguments reach the shell as one command', async () => {
@@ -80,7 +102,7 @@ describe('createAppTaskRunOptionScript', () => {
     ])
     await task.task((value) => value)
 
-    expect(execAndWait).toHaveBeenCalledWith('npm run reset-project -- --yes --force', targetDirectory)
+    expect(execAndWait).toHaveBeenCalledWith('npm run -- reset-project --yes --force', targetDirectory)
   })
 
   it('fails when the template does not declare the script', async () => {

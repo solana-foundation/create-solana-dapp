@@ -137,6 +137,9 @@ When no flag is passed for an option group, the group's default option is select
 group, such as `--llamacpp`, replaces the default.
 
 An option can declare a `run` value naming a script in the template's `package.json`, optionally followed by arguments.
+An optional `--` immediately after the script name separates the script from its arguments. The CLI adapts this separator
+for the selected package manager, so both `reset-project -- --yes` and `reset-project --yes` pass `--yes` to the script.
+Any later `--` is passed through as a script argument.
 The script runs with the selected package manager after the template is cloned and **before dependencies are
 installed**, so a script that trims `package.json` is reflected in the lockfile and `node_modules`, and any files it
 writes are still picked up by the rename step. The script must not prompt, since it runs without an interactive
