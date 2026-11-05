@@ -1,8 +1,10 @@
 import { intro, log, outro } from '@clack/prompts'
+import * as process from 'node:process'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchTemplateData } from '../src/utils/fetch-template-data'
 import { getArgs } from '../src/utils/get-args'
 import { getPrompts } from '../src/utils/get-prompts'
+import { listVersions } from '../src/utils/list-versions'
 import { runVersionCheck } from '../src/utils/run-version-check'
 import type { Template } from '../src/utils/template'
 import type { TemplateJsonTemplate } from '../src/utils/template-schema'
@@ -30,6 +32,15 @@ vi.mock('../src/utils/run-version-check', () => ({
   runVersionCheck: vi.fn(),
 }))
 
+vi.mock('../src/utils/list-versions', () => ({ listVersions: vi.fn() }))
+
+vi.mock('node:process', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('node:process')>()),
+  exit: vi.fn((code) => {
+    throw new Error(`process.exit(${code})`)
+  }),
+}))
+
 const app = { name: 'create-solana-dapp', version: '0.0.0' }
 const template: TemplateJsonTemplate = {
   description: 'Basic template',
@@ -44,6 +55,18 @@ describe('getArgs', () => {
     vi.clearAllMocks()
     vi.mocked(fetchTemplateData).mockResolvedValue({ items: [], templates: [template] })
     vi.mocked(getPrompts).mockResolvedValue({})
+  })
+
+  it('lists installed versions without fetching templates or checking for updates', async () => {
+    vi.mocked(fetchTemplateData).mockRejectedValue(new Error('Network unavailable'))
+
+    await expect(getArgs(['node', 'create-solana-dapp', '--list-versions'], app)).rejects.toThrow('process.exit(0)')
+
+    expect(listVersions).toHaveBeenCalledOnce()
+    expect(process.exit).toHaveBeenCalledWith(0)
+    expect(fetchTemplateData).not.toHaveBeenCalled()
+    expect(runVersionCheck).not.toHaveBeenCalled()
+    expect(getPrompts).not.toHaveBeenCalled()
   })
 
   it('parses --templates-url as a URL value instead of a positional argument', async () => {

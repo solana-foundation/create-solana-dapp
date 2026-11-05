@@ -61,13 +61,13 @@ Examples:
   const result = input.opts()
   const verbose = result.verbose ?? false
 
-  // Fetch the templates url, parse the template data and create menu items following our menu config
-  const { items, templates } = await fetchTemplateData({ config: getMenuConfig(), url: result.templatesUrl, verbose })
-
   if (result.listVersions) {
     listVersions()
     process.exit(0)
   }
+
+  // Fetch the templates url, parse the template data and create menu items following our menu config
+  const { items, templates } = await fetchTemplateData({ config: getMenuConfig(), url: result.templatesUrl, verbose })
 
   if (result.listTemplates) {
     listTemplates({ templates })
